@@ -1,7 +1,7 @@
 # Карта Февральской революции 1918 года в Петрограде
 
 [![ru](https://img.shields.io/badge/lang-ru-blue.svg)](README.md)
-[![en](https://img.shields.io/badge/lang-en-red.svg)](README.en.md)
+[![en](https://img.shields.io/badge/lang-en-red.svg)](docs/README.en.md)
 
 Интерактивная цифровая карта Петрограда периода Февральской революции 1917 года. События привязаны к конкретным точкам города и точным датам.
 
