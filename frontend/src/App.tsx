@@ -1,4 +1,6 @@
 import './output.css';
+import {Button} from "./components/ui/button.tsx";
+import {Label} from "./components/ui/label.tsx";
 
 function App() {
     return (
@@ -9,6 +11,12 @@ function App() {
                 <button className="mt-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition">
                     Click Me
                 </button>
+                <Button>
+                    Hi
+                </Button>
+                <Label>
+                    Hi
+                </Label>
             </div>
         </div>
     );
