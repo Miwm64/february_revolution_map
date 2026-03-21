@@ -9,9 +9,7 @@ Install dependencies:
 npm install
 ```
 
-
-Docker build and run:
+Compile tailwind css 
 ```bash
-docker build -t frmap-frontend .
-docker run -p 4322:80 -d --name frmap-frontend frmap-frontend
+npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch
 ```
