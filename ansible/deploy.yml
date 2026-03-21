@@ -1,0 +1,36 @@
+---
+- name: Deploy frmap backend
+  hosts: my_servers
+  become: true
+  tags: frmap_backend
+  roles:
+    - role: docker_git_deploy
+      vars:
+        repo_url: "git@github.com:Miwm64/february_revolution_map.git"
+        repo_dest: "/opt/frmap_backend"
+        repo_path: "/backend"
+        image_name: "frmap-backend"
+        container_name: "frmap-backend"
+        host_port: 4321
+        app_port: 8080
+        branch: backend/feat/spring
+        docker_env: 
+          PG_PASSWORD: "{{ pg_password }}"
+
+        
+- name: Deploy frmap frontend
+  hosts: my_servers
+  become: true
+  tags: frmap_frontend
+  roles:
+    - role: docker_git_deploy
+      vars:
+        repo_url: "git@github.com:Miwm64/february_revolution_map.git"
+        repo_dest: "/opt/frmap_frontend"
+        repo_path: "/frontend"
+        image_name: "frmap-frontend"
+        container_name: "frmap-frontend"
+        host_port: 4322
+        app_port: 80
+        branch: frontend/feat/docker
+        docker_env: {}
