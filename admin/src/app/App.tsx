@@ -1,25 +1,43 @@
 import '../output.css';
+import './App.css';
+import { Routes, Route, Link } from 'react-router-dom';
+import HomePage from "../pages/main/ui";
 import {Button} from "../shared/ui/button.tsx";
+import ListPage from "../pages/list/ui";
+import UpdatePage from "../pages/update/ui";
+import CreatePage from "../pages/create/ui";
 import {Label} from "../shared/ui/label.tsx";
+import CreateAdminPage from "../pages/create_admin/ui";
+
 
 function App() {
     return (
-        <div className="h-screen flex items-center justify-center bg-gray-900 text-white">
-            <div className="text-center p-6 rounded-lg bg-gray-800 shadow-lg">
-                <h1 className="text-3xl font-bold mb-4">Hello, Tailwind!</h1>
-                <p className="text-gray-300">This is a simple React + Tailwind app.</p>
-                <button className="mt-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition">
-                    Click Me
-                </button>
-                <Button>
-                    Hi
-                </Button>
-                <Label>
-                    Hi
-                </Label>
+        <div className="min-h-screen flex flex-col">
+            <nav className="flex justify-center p-4 text-black">
+                <Button className="text-xl"><Link to="/create-admin">Create admin</Link></Button>
+                <Button className="text-xl"><Link to="/list">List of events</Link></Button>
+                <Button className="text-xl"><Link to="/">Home</Link></Button>
+                <Button className="text-xl"><Link to="/update">Update event</Link></Button>
+                <Button className="text-xl"><Link to="/create">New event</Link></Button>
+            </nav>
+
+            <div className="flex-1">
+                <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/list" element={<ListPage />} />
+                    <Route path="/update" element={<UpdatePage />} />
+                    <Route path="/create" element={<CreatePage />} />
+                    <Route path="/create-admin" element={<CreateAdminPage />} />
+                </Routes>
             </div>
+
+            <footer className="p-4 text-center">
+                <Label className="justify-center text-xl">
+                    Developed by bez.bab:<br/>
+                    Miwm64 | kessi.kissa | 69n1Ner_ | i11uha
+                </Label>
+            </footer>
         </div>
     );
 }
-
 export default App;
