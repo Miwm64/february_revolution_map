@@ -6,5 +6,5 @@ mvn clean compile
 
 Run:
 ```bash
-mvn exec:java
+mvn spring-boot:run
 ```
