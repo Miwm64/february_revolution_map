@@ -1,4 +1,6 @@
-package ru.spb.bezbab.frmap.backend;
+package ru.spb.bezbab.frmap.backend.controllers;
+
+import ru.spb.bezbab.frmap.backend.entities.Event;
 
 import java.util.ArrayList;
 

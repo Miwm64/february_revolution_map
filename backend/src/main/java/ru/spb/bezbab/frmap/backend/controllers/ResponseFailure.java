@@ -1,4 +1,4 @@
-package ru.spb.bezbab.frmap.backend;
+package ru.spb.bezbab.frmap.backend.controllers;
 
 public class ResponseFailure extends Response<String> {
     public ResponseFailure(String msg){
