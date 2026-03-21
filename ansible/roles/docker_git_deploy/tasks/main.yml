@@ -17,8 +17,11 @@
     name: "{{ image_name }}"
     build:
       path: "{{ repo_dest }}{{ repo_path }}"
+      nocache: yes
     source: build
     state: present
+    force_source: yes
+
 
 - name: Stop existing container if running
   community.docker.docker_container:
@@ -33,6 +36,7 @@
     image: "{{ image_name }}"
     state: started
     restart_policy: always
+    recreate: yes
     ports:
       - "{{ host_port }}:{{ app_port }}"
     env: "{{ docker_env | default({}) }}"
