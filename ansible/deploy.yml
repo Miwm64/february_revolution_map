@@ -13,7 +13,6 @@
         container_name: "frmap-backend"
         host_port: 4321
         app_port: 8080
-        branch: backend/feat/spring
         docker_env: 
           PG_PASSWORD: "{{ pg_password }}"
           PG_USER: "{{ pg_user }}"
@@ -34,5 +33,4 @@
         container_name: "frmap-frontend"
         host_port: 4322
         app_port: 80
-        branch: frontend/feat/docker
         docker_env: {}
