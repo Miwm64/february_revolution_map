@@ -1,4 +1,4 @@
-package ru.spb.bezbab.frmap.backend;
+package ru.spb.bezbab.frmap.backend.entities;
 
 public class Point {
     public final Double x;

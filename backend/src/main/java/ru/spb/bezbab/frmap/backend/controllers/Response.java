@@ -1,4 +1,4 @@
-package ru.spb.bezbab.frmap.backend;
+package ru.spb.bezbab.frmap.backend.controllers;
 
 public abstract class Response<T> {
     private boolean isSuccess;
