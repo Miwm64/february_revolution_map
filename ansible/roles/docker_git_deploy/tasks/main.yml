@@ -1,0 +1,42 @@
+---
+- name: Ensure Git is installed
+  package:
+    name: git
+    state: present
+
+- name: Clone or update code from Git
+  git:
+    repo: "{{ repo_url }}"
+    dest: "{{ repo_dest }}"
+    version: "{{ branch }}"
+    force: yes
+    accept_hostkey: true
+
+- name: Build Docker image
+  community.docker.docker_image:
+    name: "{{ image_name }}"
+    build:
+      path: "{{ repo_dest }}{{ repo_path }}"
+      nocache: yes
+    source: build
+    state: present
+    force_source: yes
+
+
+- name: Stop existing container if running
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    state: absent
+    force_kill: true
+  ignore_errors: true
+
+- name: Run new version of container
+  community.docker.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ image_name }}"
+    state: started
+    restart_policy: always
+    recreate: yes
+    ports:
+      - "{{ host_port }}:{{ app_port }}"
+    env: "{{ docker_env | default({}) }}"

@@ -1,0 +1,8 @@
+repo_url: ""
+repo_dest: "/opt/myapp"
+image_name: "myapp-image"
+container_name: "myapp-container"
+app_port: 4000
+host_port: 4000
+branch: master
+repo_path: ""
