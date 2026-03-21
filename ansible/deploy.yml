@@ -16,6 +16,8 @@
         branch: backend/feat/spring
         docker_env: 
           PG_PASSWORD: "{{ pg_password }}"
+          PG_USER: "{{ pg_user }}"
+          PG_URL: "{{ pg_url }}"
 
         
 - name: Deploy frmap frontend
