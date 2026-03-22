@@ -19,23 +19,35 @@ const UpdatePage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    // Fetch event when URL param changes
     useEffect(() => {
-        if (!id) return; // do nothing if no id
-        let isMounted = true; // cleanup guard
+        if (!id) return;
+
+        let isMounted = true;
 
         setLoading(true);
         setError("");
         setEvent(null);
 
-        fetch(`http://frmap.miwm64.spb.ru/api/events/${id}`)
+        fetch(`http://frmap.miwm64.spb.ru/api/event`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ id: Number(id) }),
+        })
             .then((res) => {
                 if (!res.ok) throw new Error("Event not found");
                 return res.json();
             })
             .then((res) => {
                 if (!isMounted) return;
-                setEvent(res);
+
+                // adjust depending on your backend format
+                if (res.data === null) {
+                    throw new Error("Failed to load");
+                }
+
+                setEvent(res.data);
                 setLoading(false);
             })
             .catch((err) => {
@@ -47,7 +59,7 @@ const UpdatePage = () => {
             });
 
         return () => {
-            isMounted = false; // prevent setState after unmount
+            isMounted = false;
         };
     }, [id]);
 
