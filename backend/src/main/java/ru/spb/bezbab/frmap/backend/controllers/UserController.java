@@ -2,14 +2,13 @@ package ru.spb.bezbab.frmap.backend.controllers;
 
 import org.springframework.web.bind.annotation.*;
 import ru.spb.bezbab.frmap.backend.database.ExecutorService;
+import ru.spb.bezbab.frmap.backend.requests.LoginRequest;
+import ru.spb.bezbab.frmap.backend.requests.TokenRequest;
+import ru.spb.bezbab.frmap.backend.requests.UserRequest;
 
-import java.sql.*;
-import java.time.Instant;
-import java.util.Base64;
 import java.security.SecureRandom;
 
 @RestController
-@RequestMapping("/user")
 public class UserController {
     private final SecureRandom secureRandom = new SecureRandom();
     private final ExecutorService executorService;
@@ -17,14 +16,18 @@ public class UserController {
         this.executorService = executorService;
     }
 
-    @PostMapping("/users")
-    public String createUser(@RequestParam String username, @RequestParam String password) {
-        executorService.createUser(username, password);
+    @PostMapping("/user")
+    public Boolean createUser(@RequestBody UserRequest userRequest) {
+        return executorService.createUser(userRequest.getUsername(), userRequest.getPassword());
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password) {
-        executorService.login(username, password);
+    public String login(@RequestBody LoginRequest loginRequest) {
+        return executorService.login(loginRequest.getUsername(), loginRequest.getPassword());
     }
 
+    @PostMapping("/token")
+    public Boolean checkToken(@RequestBody TokenRequest tokenRequest) {
+        return executorService.checkToken(tokenRequest.getToken());
+    }
 }
