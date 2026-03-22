@@ -56,6 +56,35 @@ public class ExecutorService {
         return events;
     }
 
+    public Event getEvent(Integer id) {
+        Event event = null;
+        try {
+            Statement st = db.getStatement();
+            ResultSet rs = st.executeQuery("SELECT * FROM events where id=" + id + ";");
+
+            if (rs.next()) {
+                event = new Event(
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("description"),
+                        rs.getTimestamp("time").toLocalDateTime(),
+                        new Point(
+                                rs.getDouble("x"),
+                                rs.getDouble("y")
+                        ),
+                        rs.getObject("next_event", Integer.class),
+                        rs.getObject("prev_event", Integer.class)
+                );
+            }
+            st.close();
+        }
+        catch (SQLException e){
+            db.connect();
+            throw new RuntimeException("Couldn't get events");
+        }
+        return event;
+    }
+
     public boolean createUser(String username, String password, String token) {
         try (Statement stmt = db.getStatement()) {
             if (!checkToken(token)){
