@@ -45,6 +45,6 @@ public class EventsController {
                 updateEventRequest.getEvent());
         HashMap<String, Boolean> response = new HashMap<>();
         response.put("data", result);
-        return null;
+        return response;
     }
 }
