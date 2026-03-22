@@ -3,6 +3,7 @@ package ru.spb.bezbab.frmap.backend.requests;
 public class UserRequest {
     private String username;
     private String password;
+    private String token;
 
     // Getters and setters
     public String getUsername() {
@@ -19,5 +20,12 @@ public class UserRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getToken() {
+        return token;
+    }
+    public void setToken(String token) {
+        this.token = token;
     }
 }

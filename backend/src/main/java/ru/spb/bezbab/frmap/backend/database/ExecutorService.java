@@ -56,8 +56,11 @@ public class ExecutorService {
         return events;
     }
 
-    public boolean createUser(String username, String password) {
+    public boolean createUser(String username, String password, String token) {
         try (Statement stmt = db.getStatement()) {
+            if (!checkToken(token)){
+                throw new RuntimeException("Authentication failed");
+            }
             String hashedPassword = passwordEncoder.encode(password);
 
             String sql = "INSERT INTO users (username, password_hash) VALUES ('"

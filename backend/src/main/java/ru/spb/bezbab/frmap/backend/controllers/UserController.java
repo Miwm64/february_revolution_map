@@ -19,7 +19,9 @@ public class UserController {
 
     @PostMapping("/user")
     public Map<String, Boolean> createUser(@RequestBody UserRequest userRequest) {
-        boolean result = executorService.createUser(userRequest.getUsername(), userRequest.getPassword());
+        boolean result = executorService.createUser(userRequest.getUsername(),
+                userRequest.getPassword(),
+                userRequest.getToken());
         return Map.of("data", result);
     }
 
