@@ -26,9 +26,12 @@ public class ExecutorService {
         this.db.connect();
     }
 
-    public ArrayList<Event> getEvents() {
+    public ArrayList<Event> getEvents(String token) {
         ArrayList<Event> events = new ArrayList<>();
         try {
+            if (!checkToken(token)){
+                throw new RuntimeException("Authentication failed");
+            }
             Statement st = db.getStatement();
             ResultSet rs = st.executeQuery("SELECT * FROM events;");
 
@@ -49,7 +52,7 @@ public class ExecutorService {
             }
             st.close();
         }
-        catch (Exception e){
+        catch (SQLException e){
             db.connect();
             throw new RuntimeException("Couldn't get events");
         }

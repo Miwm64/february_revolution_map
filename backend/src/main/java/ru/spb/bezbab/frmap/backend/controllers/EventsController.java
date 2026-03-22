@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.spb.bezbab.frmap.backend.database.ExecutorService;
 import ru.spb.bezbab.frmap.backend.entities.Event;
+import ru.spb.bezbab.frmap.backend.requests.LoginRequest;
+import ru.spb.bezbab.frmap.backend.requests.TokenRequest;
 
 
 @RestController
@@ -22,9 +22,9 @@ public class EventsController {
     }
 
 
-    @GetMapping
-    public Map<String, List<Event>> getEvents() {
-        List<Event> result = executorService.getEvents();
+    @PostMapping
+    public Map<String, List<Event>> getEvents(@RequestBody TokenRequest tokenRequest) {
+        List<Event> result = executorService.getEvents(tokenRequest.getToken());
         HashMap<String, List<Event>> response = new HashMap<>();
         response.put("data", result);
         return response;
