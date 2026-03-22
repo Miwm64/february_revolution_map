@@ -150,12 +150,14 @@ const UpdatePage = () => {
                 setLoading(false);
                 setSuccess("Deleted successfully!");
                 setEvent(null);
+                navigate(`/list/`, { replace: true });
             })
             .catch((err) => {
                 console.error(err);
                 setError("Failed to delete event");
                 setLoading(false);
             });
+
     };
 
     return (

@@ -13,6 +13,7 @@ import {
 } from "../../../shared/ui/collapsible";
 import { Button } from "../../../shared/ui/button";
 import { useNavigate } from "react-router-dom";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 type Event = {
     id: number;
@@ -39,6 +40,7 @@ const ListPage = () => {
     const [sortType, setSortType] = useState<"id" | "time">("id");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const navigate = useNavigate();
+    const [openId, setOpenId] = useState<number | null>(null);
 
     useEffect(() => {
         const token = getToken();
@@ -85,7 +87,6 @@ const ListPage = () => {
         <div className="p-6 flex flex-col gap-4">
             {/* Sorting controls */}
             <div className="flex gap-2 mb-4 items-center">
-                {/* Sort Type */}
                 <span className="font-medium">Sort by:</span>
                 <Button
                     variant={sortType === "id" ? "default" : "outline"}
@@ -101,8 +102,6 @@ const ListPage = () => {
                 >
                     Time {sortType === "time" && (sortOrder === "asc" ? "↑" : "↓")}
                 </Button>
-
-                {/* Toggle order separately */}
                 <Button
                     variant="outline"
                     onClick={() => setSortOrder(prev => (prev === "asc" ? "desc" : "asc"))}
@@ -113,53 +112,98 @@ const ListPage = () => {
             </div>
 
             <div className="flex flex-col gap-6">
-                {sortedData.map((event) => (
-                    <Collapsible key={event.id}>
-                        <div className="flex gap-4 items-center">
-                            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold shrink-0">
-                                {event.id}
-                            </div>
+                {sortedData.map((event) => {
+                    const handleDelete = async () => {
+                        const confirmed = window.confirm(`Are you sure you want to delete event "${event.title}"?`);
+                        if (!confirmed) return;
 
-                            <Card className="flex-1">
-                                <CardHeader className="flex flex-row justify-between items-center">
-                                    <CardTitle>{event.title}</CardTitle>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => navigate(`/update/${event.id}`)}
-                                        >
-                                            Edit
-                                        </Button>
-                                        <CollapsibleTrigger asChild>
-                                            <Button variant="ghost" size="sm">
-                                                Toggle
+                        const token = getToken();
+                        if (!token) {
+                            logout();
+                            return;
+                        }
+
+                        try {
+                            const res = await fetch(`http://frmap.miwm64.spb.ru/api/delete`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ token, id: event.id }),
+                            });
+
+                            const data = await res.json();
+
+                            if (!res.ok || data.error) {
+                                throw new Error(data.error || "Failed to delete");
+                            }
+
+                            setData(prev => prev ? prev.filter(e => e.id !== event.id) : null);
+                        } catch (err: any) {
+                            console.error(err);
+                            alert(`Failed to delete event: ${err.message || err}`);
+                        }
+                    };
+
+                    const isOpen = openId === event.id;
+
+                    return (
+                        <Collapsible
+                            key={event.id}
+                            open={isOpen}
+                            onOpenChange={(val) => setOpenId(val ? event.id : null)}
+                        >
+                            <div className="flex gap-4 items-center">
+                                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-primary-foreground font-bold shrink-0">
+                                    {event.id}
+                                </div>
+
+                                <Card className="flex-1">
+                                    <CardHeader className="flex flex-row justify-between items-center">
+                                        <CardTitle>{event.title}</CardTitle>
+                                        <div className="flex gap-2 items-center">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => navigate(`/update/${event.id}`)}
+                                            >
+                                                Edit
                                             </Button>
-                                        </CollapsibleTrigger>
-                                    </div>
-                                </CardHeader>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={handleDelete}
+                                            >
+                                                Delete
+                                            </Button>
+                                            <CollapsibleTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="p-1">
+                                                    {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                                </Button>
+                                            </CollapsibleTrigger>
+                                        </div>
+                                    </CardHeader>
 
-                                <CollapsibleContent>
-                                    <CardContent className="space-y-2">
-                                        <p className="text-sm text-muted-foreground">{event.description}</p>
-                                        <div className="text-sm">
-                                            <span className="font-medium">Time:</span>{" "}
-                                            {new Date(event.time).toLocaleString()}
-                                        </div>
-                                        <div className="text-sm">
-                                            <span className="font-medium">Coordinates:</span>{" "}
-                                            ({event.coordinates.x}, {event.coordinates.y})
-                                        </div>
-                                        <div className="flex gap-2 text-sm">
-                                            {event.prevEvent !== null && <Badge variant="outline">Prev: #{event.prevEvent}</Badge>}
-                                            {event.nextEvent !== null && <Badge variant="outline">Next: #{event.nextEvent}</Badge>}
-                                        </div>
-                                    </CardContent>
-                                </CollapsibleContent>
-                            </Card>
-                        </div>
-                    </Collapsible>
-                ))}
+                                    <CollapsibleContent>
+                                        <CardContent className="space-y-2">
+                                            <p className="text-sm text-muted-foreground">{event.description}</p>
+                                            <div className="text-sm">
+                                                <span className="font-medium">Time:</span>{" "}
+                                                {new Date(event.time).toLocaleString()}
+                                            </div>
+                                            <div className="text-sm">
+                                                <span className="font-medium">Coordinates:</span>{" "}
+                                                ({event.coordinates.x}, {event.coordinates.y})
+                                            </div>
+                                            <div className="flex gap-2 text-sm">
+                                                {event.prevEvent !== null && <Badge variant="outline">Prev: #{event.prevEvent}</Badge>}
+                                                {event.nextEvent !== null && <Badge variant="outline">Next: #{event.nextEvent}</Badge>}
+                                            </div>
+                                        </CardContent>
+                                    </CollapsibleContent>
+                                </Card>
+                            </div>
+                        </Collapsible>
+                    );
+                })}
             </div>
         </div>
     );
