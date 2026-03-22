@@ -2,6 +2,12 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../shared/ui/card";
 import { Button } from "../../../shared/ui/button";
 
+// helper
+const getToken = (): string | null => {
+    const match = document.cookie.match(/(^| )token=([^;]+)/);
+    return match ? match[2] : null;
+};
+
 const CreateAdminPage = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -13,16 +19,31 @@ const CreateAdminPage = () => {
         setLoading(true);
         setMessage("");
 
+        const token = getToken();
+        if (!token) {
+            setMessage("Not authenticated");
+            setLoading(false);
+            return;
+        }
+
         try {
             const res = await fetch("http://frmap.miwm64.spb.ru/api/user", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({
+                    username,
+                    password,
+                    token // ✅ added
+                }),
             });
 
-            if (!res.ok) throw new Error("Failed to create admin");
+            const data = await res.json();
+
+            if (!res.ok || !data.data) {
+                throw new Error("Failed to create admin");
+            }
 
             setMessage("Admin created successfully!");
             setUsername("");

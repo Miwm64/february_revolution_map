@@ -47,11 +47,10 @@ const ListPage = () => {
         }
 
         fetch("http://frmap.miwm64.spb.ru/api/events", {
-            method: "POST",
+            method: "GET",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ token }),
         })
             .then(res => res.json())
             .then(res => {

@@ -49,7 +49,7 @@ const AuthGate = ({ children }: AuthGateProps) => {
 
                 // ❌ invalid token → clear cookie & redirect to login
                 document.cookie = "token=; Max-Age=0; path=/;";
-                navigate("/login", { replace: true });
+                navigate(".admin/login", { replace: true });
             }
         };
 
