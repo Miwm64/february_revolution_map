@@ -80,9 +80,41 @@ public class ExecutorService {
         }
         catch (SQLException e){
             db.connect();
-            throw new RuntimeException("Couldn't get events");
+            throw new RuntimeException("Couldn't get event");
         }
         return event;
+    }
+
+    public boolean updateEvent(String token, Event event) {
+        try {
+            if (!checkToken(token)){
+                throw new RuntimeException("Authentication failed");
+            }
+
+            Statement st = db.getStatement();
+
+            String sql = "UPDATE events SET " +
+                    "title = '" + event.title + "', " +
+                    "description = '" + event.description + "', " +
+                    "time = '" + event.time + "', " +
+                    "x = " + event.coordinates.x + ", " +
+                    "y = " + event.coordinates.y + ", " +
+                    "next_event = " + (event.nextEvent != null ? event.nextEvent : "NULL") + ", " +
+                    "prev_event = " + (event.prevEvent != null ? event.prevEvent : "NULL") + " " +
+                    "WHERE id = " + event.id + ";";
+
+            int updatedRows = st.executeUpdate(sql);
+
+            if (updatedRows == 0) {
+                return false;
+            }
+            st.close();
+        }
+        catch (SQLException e){
+            db.connect();
+            throw new RuntimeException("Couldn't update event");
+        }
+        return true;
     }
 
     public boolean createUser(String username, String password, String token) {

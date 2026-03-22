@@ -12,6 +12,7 @@ import ru.spb.bezbab.frmap.backend.entities.Event;
 import ru.spb.bezbab.frmap.backend.requests.EventRequest;
 import ru.spb.bezbab.frmap.backend.requests.LoginRequest;
 import ru.spb.bezbab.frmap.backend.requests.TokenRequest;
+import ru.spb.bezbab.frmap.backend.requests.UpdateEventRequest;
 
 
 @RestController
@@ -36,5 +37,14 @@ public class EventsController {
         HashMap<String, Event> response = new HashMap<>();
         response.put("data", result);
         return response;
+    }
+
+    @PostMapping("/update")
+    public Map<String, Boolean> updateEvent(@RequestBody UpdateEventRequest updateEventRequest) {
+        boolean result = executorService.updateEvent(updateEventRequest.getToken(),
+                updateEventRequest.getEvent());
+        HashMap<String, Boolean> response = new HashMap<>();
+        response.put("data", result);
+        return null;
     }
 }
