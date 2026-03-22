@@ -9,10 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.spb.bezbab.frmap.backend.database.ExecutorService;
 import ru.spb.bezbab.frmap.backend.entities.Event;
-import ru.spb.bezbab.frmap.backend.requests.EventRequest;
-import ru.spb.bezbab.frmap.backend.requests.LoginRequest;
-import ru.spb.bezbab.frmap.backend.requests.TokenRequest;
-import ru.spb.bezbab.frmap.backend.requests.UpdateEventRequest;
+import ru.spb.bezbab.frmap.backend.requests.*;
 
 
 @RestController
@@ -43,6 +40,15 @@ public class EventsController {
     public Map<String, Boolean> updateEvent(@RequestBody UpdateEventRequest updateEventRequest) {
         boolean result = executorService.updateEvent(updateEventRequest.getToken(),
                 updateEventRequest.getEvent());
+        HashMap<String, Boolean> response = new HashMap<>();
+        response.put("data", result);
+        return response;
+    }
+
+    @PostMapping("/delete")
+    public Map<String, Boolean> deleteEvent(@RequestBody DeleteRequest deleteRequest) {
+        Boolean result = executorService.deleteEvent(deleteRequest.getToken(),
+                deleteRequest.getId());
         HashMap<String, Boolean> response = new HashMap<>();
         response.put("data", result);
         return response;

@@ -85,6 +85,23 @@ public class ExecutorService {
         return event;
     }
 
+    public Boolean deleteEvent(String token, Integer id) {
+        try {
+            if (!checkToken(token)){
+                throw new RuntimeException("Authentication failed");
+            }
+            Statement st = db.getStatement();
+            System.out.println("DELETE FROM events where id=" + id + ";");
+            st.execute("DELETE FROM events where id=" + id + ";");
+            st.close();
+        }
+        catch (SQLException e){
+            db.connect();
+            throw new RuntimeException("Couldn't delete event");
+        }
+        return true;
+    }
+
     public boolean updateEvent(String token, Event event) {
         try {
             if (!checkToken(token)){
