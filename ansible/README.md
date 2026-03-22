@@ -9,14 +9,19 @@ Frontend
 ansible-playbook deploy.yml --tags frmap_frontend -l miwm64.spb.ru -i inventory.ini
 ```
 
+Admin
+```commandline
+ansible-playbook deploy.yml --tags frmap_admin -l miwm64.spb.ru -i inventory.ini
+```
+
 Encrypt vault
 ```commandline
-ansible-vault encrypt_string --vault-password-file ./vault.pass '<string_to_encrypt>' --name '<string_name_of_variable>' 
+ansible-vault encrypt_string --vault-password-file ./vault.pass '<string_to_encrypt>' --name '<string_name_of_variable>'
 ```
 
 Decrypt vault
 ```commandline
-ansible localhost -m ansible.builtin.debug -a var="secret_name" -e "@group_vars/all/vault.yml" --vault-password-file ./vault.pass 
+ansible localhost -m ansible.builtin.debug -a var="secret_name" -e "@group_vars/all/vault.yml" --vault-password-file ./vault.pass
 ```
 
 Add to known hosts

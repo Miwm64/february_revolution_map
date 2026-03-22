@@ -34,3 +34,19 @@
         host_port: 4322
         app_port: 80
         docker_env: {}
+
+- name: Deploy frmap admin
+  hosts: my_servers
+  become: true
+  tags: frmap_admin
+  roles:
+    - role: docker_git_deploy
+      vars:
+        repo_url: "git@github.com:Miwm64/february_revolution_map.git"
+        repo_dest: "/opt/frmap_admin"
+        repo_path: "/admin"
+        image_name: "frmap-admin"
+        container_name: "frmap-admin"
+        host_port: 4320
+        app_port: 80
+        docker_env: {}
