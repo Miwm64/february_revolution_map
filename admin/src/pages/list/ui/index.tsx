@@ -12,6 +12,7 @@ import {
     CollapsibleTrigger
 } from "../../../shared/ui/collapsible";
 import { Button } from "../../../shared/ui/button";
+import {useNavigate} from "react-router-dom";
 
 type Event = {
     id: number;
@@ -38,6 +39,7 @@ const logout = () => {
 const ListPage = () => {
     const [data, setData] = useState<Event[] | null>(null);
     const [search, setSearch] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         const token = getToken();
@@ -101,14 +103,24 @@ const ListPage = () => {
                             {/* RIGHT: card */}
                             <Card className="flex-1">
                                 <CardHeader className="flex flex-row justify-between items-center">
-                                    <CardTitle>{event.title}</CardTitle>
+                                <CardTitle>{event.title}</CardTitle>
+
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => navigate(`/update/${event.id}`)}
+                                    >
+                                        Edit
+                                    </Button>
 
                                     <CollapsibleTrigger asChild>
                                         <Button variant="ghost" size="sm">
                                             Toggle
                                         </Button>
                                     </CollapsibleTrigger>
-                                </CardHeader>
+                                </div>
+                            </CardHeader>
 
                                 <CollapsibleContent>
                                     <CardContent className="space-y-2">
