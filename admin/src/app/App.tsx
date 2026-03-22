@@ -13,21 +13,33 @@ import CreateAdminPage from "../pages/create_admin/ui";
 function App() {
     return (
         <div className="min-h-screen flex flex-col">
-            <nav className="flex justify-center p-4 text-black">
-                <Button className="text-xl"><Link to="/create-admin">Create admin</Link></Button>
-                <Button className="text-xl"><Link to="/list">List of events</Link></Button>
-                <Button className="text-xl"><Link to="/">Home</Link></Button>
-                <Button className="text-xl"><Link to="/update">Update event</Link></Button>
-                <Button className="text-xl"><Link to="/create">New event</Link></Button>
+            <nav className="relative flex justify-between p-4 text-black">
+                {/* Left buttons */}
+                <div className="flex gap-4">
+                    <Button className="text-xl"><Link to="/create-admin">Create admin</Link></Button>
+                </div>
+
+                {/* Centered Home button */}
+                <div className="absolute left-1/2 -translate-x-1/2">
+                    <Button className="text-xl"><Link to="/">Home</Link></Button>
+                </div>
+
+                {/* Right buttons */}
+                <div className="flex gap-4">
+                    <Button className="text-xl"><Link to="/list">List of events</Link></Button>
+                    <Button className="text-xl"><Link to="/update">Update event</Link></Button>
+                    <Button className="text-xl"><Link to="/create">New event</Link></Button>
+                </div>
             </nav>
 
             <div className="flex-1">
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/list" element={<ListPage />} />
-                    <Route path="/update" element={<UpdatePage />} />
                     <Route path="/create" element={<CreatePage />} />
                     <Route path="/create-admin" element={<CreateAdminPage />} />
+                    <Route path="/update/" element={<UpdatePage />} />
+                    <Route path="/update/:id" element={<UpdatePage />} />
                 </Routes>
             </div>
 
