@@ -31,7 +31,7 @@ const LoginPage = () => {
 
             // ✅ store token in cookie
             document.cookie = `token=${data.data}; path=/;`;
-            console.log(data.data);
+            document.cookie = `username=${encodeURIComponent(username)}; path=/;`;
             navigate("/");
         } catch (err) {
             setError("Login failed");
