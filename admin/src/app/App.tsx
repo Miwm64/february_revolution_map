@@ -8,6 +8,8 @@ import UpdatePage from "../pages/update/ui";
 import CreatePage from "../pages/create/ui";
 import {Label} from "../shared/ui/label.tsx";
 import CreateAdminPage from "../pages/create_admin/ui";
+import LoginPage from '../pages/login/ui/index.tsx';
+import AuthGate from "./AuthGate.tsx";
 
 
 function App() {
@@ -33,14 +35,28 @@ function App() {
             </nav>
 
             <div className="flex-1">
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/list" element={<ListPage />} />
-                    <Route path="/create" element={<CreatePage />} />
-                    <Route path="/create-admin" element={<CreateAdminPage />} />
-                    <Route path="/update/" element={<UpdatePage />} />
-                    <Route path="/update/:id" element={<UpdatePage />} />
-                </Routes>
+                <div className="flex-1">
+                    <Routes>
+                        <Route path="/login" element={<LoginPage />} />
+
+                        {/* protected routes */}
+                        <Route
+                            path="/*"
+                            element={
+                                <AuthGate>
+                                    <Routes>
+                                        <Route path="/" element={<HomePage />} />
+                                        <Route path="/list" element={<ListPage />} />
+                                        <Route path="/create" element={<CreatePage />} />
+                                        <Route path="/create-admin" element={<CreateAdminPage />} />
+                                        <Route path="/update/" element={<UpdatePage />} />
+                                        <Route path="/update/:id" element={<UpdatePage />} />
+                                    </Routes>
+                                </AuthGate>
+                            }
+                        />
+                    </Routes>
+                </div>
             </div>
 
             <footer className="p-4 text-center">
