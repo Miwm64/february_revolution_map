@@ -23,15 +23,50 @@ type Event = {
     prevEvent: number | null;
 };
 
+// Helper to read token from cookies
+const getToken = (): string | null => {
+    const match = document.cookie.match(/(^| )token=([^;]+)/);
+    return match ? match[2] : null;
+};
+
+// Helper to logout
+const logout = () => {
+    document.cookie = "token=; Max-Age=0; path=/;";
+    window.location.href = "/login"; // redirect to login
+};
+
 const ListPage = () => {
     const [data, setData] = useState<Event[] | null>(null);
     const [search, setSearch] = useState("");
 
     useEffect(() => {
-        fetch('http://frmap.miwm64.spb.ru/api/events')
+        const token = getToken();
+        if (!token) {
+            logout();
+            return;
+        }
+
+        fetch("http://frmap.miwm64.spb.ru/api/events", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ token }),
+        })
             .then(res => res.json())
-            .then(res => setData(res.data))
-            .catch(err => console.error(err));
+            .then(res => {
+                // ✅ Check for authentication
+                if (res.error || !res.data) {
+                    logout(); // invalid token → logout
+                    return;
+                }
+
+                setData(res.data);
+            })
+            .catch(err => {
+                console.error(err);
+                logout(); // network or other error → logout
+            });
     }, []);
 
     if (!data) return <div className="p-4">Loading...</div>;
