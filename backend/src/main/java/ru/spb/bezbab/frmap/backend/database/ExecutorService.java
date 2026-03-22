@@ -98,7 +98,6 @@ public class ExecutorService {
                 return token;
             }
             return null;
-
         } catch (SQLException e) {
             throw new RuntimeException("Couldn't login");
         }

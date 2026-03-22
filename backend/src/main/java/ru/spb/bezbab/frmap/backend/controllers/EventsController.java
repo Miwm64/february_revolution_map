@@ -1,6 +1,7 @@
 package ru.spb.bezbab.frmap.backend.controllers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +24,9 @@ public class EventsController {
 
     @GetMapping
     public Map<String, List<Event>> getEvents() {
-        return Map.of("data", executorService.getEvents());
+        List<Event> result = executorService.getEvents();
+        HashMap<String, List<Event>> response = new HashMap<>();
+        response.put("data", result);
+        return response;
     }
 }

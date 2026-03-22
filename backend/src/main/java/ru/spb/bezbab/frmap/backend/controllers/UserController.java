@@ -7,6 +7,7 @@ import ru.spb.bezbab.frmap.backend.requests.TokenRequest;
 import ru.spb.bezbab.frmap.backend.requests.UserRequest;
 
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -25,7 +26,9 @@ public class UserController {
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody LoginRequest loginRequest) {
         String result = executorService.login(loginRequest.getUsername(), loginRequest.getPassword());
-        return Map.of("data", result);
+        HashMap<String, String> response = new HashMap<>();
+        response.put("data", result);
+        return response;
     }
 
     @PostMapping("/token")
