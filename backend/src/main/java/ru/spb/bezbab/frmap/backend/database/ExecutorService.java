@@ -26,12 +26,9 @@ public class ExecutorService {
         this.db.connect();
     }
 
-    public ArrayList<Event> getEvents(String token) {
+    public ArrayList<Event> getEvents() {
         ArrayList<Event> events = new ArrayList<>();
         try {
-            if (!checkToken(token)){
-                throw new RuntimeException("Authentication failed");
-            }
             Statement st = db.getStatement();
             ResultSet rs = st.executeQuery("SELECT * FROM events;");
 

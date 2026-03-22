@@ -22,9 +22,9 @@ public class EventsController {
     }
 
 
-    @PostMapping
-    public Map<String, List<Event>> getEvents(@RequestBody TokenRequest tokenRequest) {
-        List<Event> result = executorService.getEvents(tokenRequest.getToken());
+    @GetMapping
+    public Map<String, List<Event>> getEvents() {
+        List<Event> result = executorService.getEvents();
         HashMap<String, List<Event>> response = new HashMap<>();
         response.put("data", result);
         return response;
