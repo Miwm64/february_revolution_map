@@ -2,6 +2,7 @@ package ru.spb.bezbab.frmap.backend.controllers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +22,7 @@ public class EventsController {
 
 
     @GetMapping
-    public List<Event> getEvents() {
-        return executorService.getEvents();
+    public Map<String, List<Event>> getEvents() {
+        return Map.of("data", executorService.getEvents());
     }
 }

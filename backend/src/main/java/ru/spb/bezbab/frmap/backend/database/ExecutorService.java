@@ -115,8 +115,8 @@ public class ExecutorService {
                 }
             }
             return false;
-
         }
+
         catch (Exception e){
             throw new RuntimeException("Couldn't validate token");
         }

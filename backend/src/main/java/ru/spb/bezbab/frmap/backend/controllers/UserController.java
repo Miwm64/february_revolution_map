@@ -7,27 +7,30 @@ import ru.spb.bezbab.frmap.backend.requests.TokenRequest;
 import ru.spb.bezbab.frmap.backend.requests.UserRequest;
 
 import java.security.SecureRandom;
+import java.util.Map;
 
 @RestController
 public class UserController {
-    private final SecureRandom secureRandom = new SecureRandom();
     private final ExecutorService executorService;
     public UserController(ExecutorService executorService) {
         this.executorService = executorService;
     }
 
     @PostMapping("/user")
-    public Boolean createUser(@RequestBody UserRequest userRequest) {
-        return executorService.createUser(userRequest.getUsername(), userRequest.getPassword());
+    public Map<String, Boolean> createUser(@RequestBody UserRequest userRequest) {
+        boolean result = executorService.createUser(userRequest.getUsername(), userRequest.getPassword());
+        return Map.of("data", result);
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest loginRequest) {
-        return executorService.login(loginRequest.getUsername(), loginRequest.getPassword());
+    public Map<String, String> login(@RequestBody LoginRequest loginRequest) {
+        String result = executorService.login(loginRequest.getUsername(), loginRequest.getPassword());
+        return Map.of("data", result);
     }
 
     @PostMapping("/token")
-    public Boolean checkToken(@RequestBody TokenRequest tokenRequest) {
-        return executorService.checkToken(tokenRequest.getToken());
+    public Map<String, Boolean> checkToken(@RequestBody TokenRequest tokenRequest) {
+        boolean result = executorService.checkToken(tokenRequest.getToken());
+        return Map.of("data", result);
     }
 }
