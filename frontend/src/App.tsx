@@ -12,10 +12,11 @@ const App: React.FC = () => {
 
   return (
     <div className="App">
-      <Map>
-        <EventMarker position={[55.75, 37.62]} title="Площадь Искусств" />
-        <EventMarker position={[59.93, 30.32]} title="Санкт-Петербург" />
-        <Route path={path} />
+      <Map
+          imageUrl="http://www.etomesto.com/map/base/78/1914spb.png"
+          bounds={[[0, 0], [1000, 1000]]} // coordinates in pixels or degrees
+      >
+        {/* optional markers or other components */}
       </Map>
     </div>
   );
