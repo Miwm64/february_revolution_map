@@ -8,31 +8,38 @@ type Event = {
     description: string;
     time: string;
     coordinates: { x: number; y: number };
+    prevEvent: number | null;
+    nextEvent: number | null;
 };
 
 const UpdatePage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    const [inputId, setInputId] = useState(id || ""); // input field
+    const [inputId, setInputId] = useState(id || "");
     const [event, setEvent] = useState<Event | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
+    const getToken = (): string | null => {
+        const match = document.cookie.match(/(^| )token=([^;]+)/);
+        return match ? match[2] : null;
+    };
+
+    // Load event
     useEffect(() => {
         if (!id) return;
 
         let isMounted = true;
-
         setLoading(true);
         setError("");
+        setSuccess("");
         setEvent(null);
 
         fetch(`http://frmap.miwm64.spb.ru/api/event`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: Number(id) }),
         })
             .then((res) => {
@@ -41,12 +48,7 @@ const UpdatePage = () => {
             })
             .then((res) => {
                 if (!isMounted) return;
-
-                // adjust depending on your backend format
-                if (res.data === null) {
-                    throw new Error("Failed to load");
-                }
-
+                if (res.data === null) throw new Error("Failed to load");
                 setEvent(res.data);
                 setLoading(false);
             })
@@ -74,34 +76,90 @@ const UpdatePage = () => {
     ) => {
         if (!event) return;
         const { name, value } = e.target;
+
         if (name === "x" || name === "y") {
             setEvent({
                 ...event,
-                coordinates: {
-                    ...event.coordinates,
-                    [name]: Number(value),
-                },
+                coordinates: { ...event.coordinates, [name]: Number(value) },
             });
+        } else if (name === "prevEvent" || name === "nextEvent") {
+            setEvent({ ...event, [name]: value ? Number(value) : null });
         } else {
             setEvent({ ...event, [name]: value });
         }
     };
 
+    // Update event
     const handleUpdate = () => {
         if (!event) return;
-        fetch(`http://frmap.miwm64.spb.ru/api/events/${event.id}`, {
-            method: "PATCH",
+        const token = getToken();
+        if (!token) {
+            setError("No token");
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+        setSuccess("");
+
+        fetch("http://frmap.miwm64.spb.ru/api/update", {
+            method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(event),
+            body: JSON.stringify({ token, event }),
         })
-            .then((res) => res.json())
-            .then(() => alert("Updated successfully!"))
-            .catch((err) => console.error(err));
+            .then((res) => {
+                if (!res.ok) throw new Error("Update failed");
+                return res.json();
+            })
+            .then((res) => {
+                if (!res || res.data === false) throw new Error("Update failed");
+                setLoading(false);
+                setSuccess("Updated successfully!");
+            })
+            .catch((err) => {
+                console.error(err);
+                setError("Failed to update event");
+                setLoading(false);
+            });
+    };
+
+    // Delete event
+    const handleDelete = () => {
+        if (!event) return;
+        const token = getToken();
+        if (!token) {
+            setError("No token");
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+        setSuccess("");
+
+        fetch("http://frmap.miwm64.spb.ru/api/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, id: event.id }),
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error("Delete failed");
+                return res.json();
+            })
+            .then((res) => {
+                if (!res || res.data === false) throw new Error("Delete failed");
+                setLoading(false);
+                setSuccess("Deleted successfully!");
+                setEvent(null);
+            })
+            .catch((err) => {
+                console.error(err);
+                setError("Failed to delete event");
+                setLoading(false);
+            });
     };
 
     return (
         <div className="p-6 max-w-xl mx-auto space-y-4">
-            {/* Always show ID input */}
             <form onSubmit={handleSubmitId} className="mb-4">
                 <label className="block mb-2 font-medium">Enter Event ID:</label>
                 <div className="flex gap-2">
@@ -120,8 +178,9 @@ const UpdatePage = () => {
                 </div>
             </form>
 
-            {loading && <div>Loading event...</div>}
+            {loading && <div>Processing...</div>}
             {error && <div className="text-red-600">{error}</div>}
+            {success && <div className="text-green-600">{success}</div>}
 
             {event && (
                 <div className="space-y-4">
@@ -179,12 +238,45 @@ const UpdatePage = () => {
                         </div>
                     </div>
 
-                    <button
-                        onClick={handleUpdate}
-                        className="bg-green-500 text-white px-4 py-2 rounded"
-                    >
-                        Save Changes
-                    </button>
+                    <div className="flex gap-2">
+                        <div className="flex-1">
+                            <label className="block font-medium">Prev Event ID</label>
+                            <input
+                                type="number"
+                                name="prevEvent"
+                                value={event.prevEvent ?? ""}
+                                onChange={handleChange}
+                                className="border p-2 w-full"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="block font-medium">Next Event ID</label>
+                            <input
+                                type="number"
+                                name="nextEvent"
+                                value={event.nextEvent ?? ""}
+                                onChange={handleChange}
+                                className="border p-2 w-full"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleUpdate}
+                            disabled={loading}
+                            className="bg-green-500 text-white px-4 py-2 rounded flex-1"
+                        >
+                            Save Changes
+                        </button>
+                        <button
+                            onClick={handleDelete}
+                            disabled={loading}
+                            className="bg-red-500 text-white px-4 py-2 rounded flex-1"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
