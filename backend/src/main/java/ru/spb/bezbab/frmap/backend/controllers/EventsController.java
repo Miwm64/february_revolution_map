@@ -53,4 +53,13 @@ public class EventsController {
         response.put("data", result);
         return response;
     }
+
+    @PostMapping("/create")
+    public Map<String, Integer> createEvent(@RequestBody UpdateEventRequest deleteRequest) {
+        Integer result = executorService.createEvent(deleteRequest.getToken(),
+                deleteRequest.getEvent());
+        HashMap<String, Integer> response = new HashMap<>();
+        response.put("data", result);
+        return response;
+    }
 }

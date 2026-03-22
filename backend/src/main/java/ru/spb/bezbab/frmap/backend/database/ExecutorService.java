@@ -12,6 +12,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 
@@ -100,6 +101,50 @@ public class ExecutorService {
             throw new RuntimeException("Couldn't delete event");
         }
         return true;
+    }
+
+    public Integer createEvent(String token, Event event) {
+        try {
+            if (!checkToken(token)) {
+                throw new RuntimeException("Authentication failed");
+            }
+
+            Statement st = db.getStatement();
+            ResultSet rs = null;
+
+            // Format LocalDateTime to PostgreSQL format
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String formattedTime = event.time.format(formatter);
+
+            String sql = "INSERT INTO events (title, description, time, x, y, next_event, prev_event) VALUES (" +
+                    "'" + event.title + "', " +
+                    "'" + event.description + "', " +
+                    "'" + formattedTime + "', " +
+                    event.coordinates.x + ", " +
+                    event.coordinates.y + ", " +
+                    (event.nextEvent != null ? event.nextEvent : "NULL") + ", " +
+                    (event.prevEvent != null ? event.prevEvent : "NULL") +
+                    ") RETURNING id";
+
+            rs = st.executeQuery(sql);
+
+            Integer newID = null;
+            // Move to the first row
+            if (rs.next()) {
+                newID = rs.getInt(1);
+            }
+
+            // Clean up
+            if (rs != null) rs.close();
+            st.close();
+
+            return newID;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            db.connect();
+            throw new RuntimeException("Couldn't create event: " + e.getMessage());
+        }
     }
 
     public boolean updateEvent(String token, Event event) {
