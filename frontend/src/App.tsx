@@ -1,8 +1,8 @@
 // src/App.tsx
 import React from 'react';
-import Map from './components/Map';
-import EventMarker from './components/EventMarker';
-import Route from './components/Route';
+import Map from './components/map/Map';
+import EventMarker from './components/map/EventMarker';
+import Route from './components/map/Route';
 
 const App: React.FC = () => {
   const path = [
