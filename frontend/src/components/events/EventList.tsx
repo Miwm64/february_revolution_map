@@ -1,10 +1,9 @@
 // основной компонент со списком и поиском
 // src/components/EventList.tsx
+
 import { useState } from 'react';
 import DateGroup from './DateGroup';
 import SearchFilter from './SearchFilter';
-import './EventList.css';
-import {Button} from "../ui/button.tsx";
 
 interface EventData {
   [date: string]: string[]; // структура: дата -> список событий
@@ -31,8 +30,19 @@ export default function EventList() {
   );
 
   return (
-    <div className="event-list-container">
-      <Button>Aboba</Button>
+    <div 
+      className="
+        overflow-y-auto
+      "
+      style={{
+        height: '100%',
+        padding: '10px 30px 10px 10px',
+        backgroundColor: '#f0f0f0',
+        border: '2px solid #333',
+        borderRadius: '8px',
+        boxSizing: 'border-box',
+      }}
+    >
       <SearchFilter searchText={searchText} setSearchText={setSearchText} />
       {filteredData.length === 0 ? (
         <div>Нет совпадений</div>
