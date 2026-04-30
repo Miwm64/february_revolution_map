@@ -1,5 +1,16 @@
 /* src/App.css */
-.App {
-  height: 100vh;
-  width: 100%;
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;; /* занимает всю высоту экрана */
+  width: 100%; /* ширина по всей странице */
+  
+}
+
+.content {
+  display: flex;
+  flex: 1; /* занимает всё доступное пространство внутри .app */
+  gap: 20px; /* промежутки между элементами */
+  overflow: hidden; /* чтобы содержимое не выходило за границы */
 }

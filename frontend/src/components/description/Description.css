@@ -1,0 +1,19 @@
+/* src/components/description/Description.css */
+.description-container {
+  
+  width: 230px; /* занимает всю доступную ширину */
+  /*height: 780px; /* или любую нужную высоту */
+  /*margin-top: 30px;
+  margin: auto; /* Центрировать горизонтально// с отступом сверху/снизу */
+  padding: 10px;
+  background-color: #f0f0f0;
+  height: 100%;
+  /*max-height: 500px; /* или любой другой размер по желанию */
+  overflow-y: auto; /* чтобы было удобно при большом списке */
+  /*padding: 10px; /* Внутренние отступы, если нужны */
+
+  /* Можно добавить любые стили по желанию */
+  border: 2px solid #333; /* Тонкая граница с темным цветом */
+  border-radius: 8px;
+  box-sizing: border-box; /* Включить границы и паддинги в ширину */
+}
