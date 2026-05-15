@@ -1,44 +1,165 @@
 import './output.css';
-import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { useState, useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// 1. Создаем КАСТОМНУЮ систему координат
-// Обычный CRS.Simple считает, что Y идет вверх (как в математике).
-// Нам нужно, чтобы Y шел ВНИЗ (как в картинке/фотошопе).
-const CRS = L.extend({}, L.CRS.Simple, {
-  transformation: new L.Transformation(1, 0, 1, 0), // 1, 0, 1, 0 означает: X растет вправо, Y растет вниз
+// ========== НАСТРОЙКИ КАРТЫ ==========
+const MAP_WIDTH = 5000;
+const MAP_HEIGHT = 6954;
+
+// Масштабирование: Leaflet ожидает, что при Zoom 0 мир имеет ширину 256px.
+// Наша карта 5000px. Нам нужно "уменьшить" координаты карты, чтобы они влезли в сетку.
+// 5000 / 32 ≈ 156 (что меньше 256). Значит масштаб 1/32 подойдет.
+const SCALE = 1 / 32;
+
+// Кастомная CRS:
+// 1. Масштабируем координаты (SCALE).
+// 2. Ось Y направлена вниз (как в картинке), поэтому используем положительный множитель для Y.
+const CustomCRS = L.extend({}, L.CRS.Simple, {
+  transformation: new L.Transformation(SCALE, 0, SCALE, 0),
 });
 
-// Компонент для управления картой
-function MapController({ center, zoom }: { center: [number, number], zoom: number }) {
-  const map = useMap();
-
-  useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
-
-  return null;
+// ========== ДАННЫЕ СОБЫТИЙ ==========
+interface Event {
+  id: number;
+  title: string;
+  date: string;
+  description: string;
+  x: number;
+  y: number;
 }
+
+const eventsData: Event[] = [
+  { id: 1, title: "Забастовка на Путиловском заводе", date: "18 февраля 1917", description: "Начало массовых забастовок рабочих", x: 1200, y: 4500 },
+  { id: 2, title: "Демонстрация на Знаменской площади", date: "23 февраля 1917", description: "Первые массовые выступления", x: 2800, y: 2200 },
+  { id: 3, title: "Восстание в Петропавловской крепости", date: "27 февраля 1917", description: "Переход гарнизона на сторону восставших", x: 2100, y: 1800 },
+];
 
 function App() {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('Все периоды');
-  const [activeLayer, setActiveLayer] = useState<string>('События');
+  const [mapCenter, setMapCenter] = useState<[number, number]>([MAP_HEIGHT / 2, MAP_WIDTH / 2]);
+  const [mapZoom, setMapZoom] = useState(3);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>(eventsData);
 
-  // Центр карты [Y, X]. Так как Y идет вниз, [0, 0] - это верхний левый угол карты.
-  // Если карта большая, можно поставить, например, [1000, 1000], чтобы видеть центр.
-  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
-  const [mapZoom, setMapZoom] = useState(1);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const leafletMap = useRef<L.Map | null>(null);
+  const tileLayer = useRef<L.TileLayer | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
 
   const periods = ['Февраль', 'Март', 'Апрель', 'Все периоды'];
-  const layers = ['События', 'Маршруты', 'Персоны', 'Организации'];
 
-  const handleZoomIn = () => setMapZoom(z => Math.min(z + 1, 5));
-  const handleZoomOut = () => setMapZoom(z => Math.max(z - 1, 0));
+  // Инициализация карты
+  useEffect(() => {
+    if (!mapRef.current || leafletMap.current) return;
+
+    console.log('🗺️ Creating Map with TILES...');
+
+    // Создаем карту
+    leafletMap.current = L.map(mapRef.current, {
+      crs: CustomCRS,
+      minZoom: 0,
+      maxZoom: 5,
+      attributionControl: false,
+    });
+
+    // Устанавливаем вид (Центр карты в пикселях)
+    leafletMap.current.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], 3);
+
+    console.log('✅ Map created');
+
+    // Добавляем TileLayer
+    // Путь /tiles/... так как мы скопировали папку в public/tiles
+    tileLayer.current = L.tileLayer('/tiles/{z}/{x}/{y}.png', {
+      minZoom: 0,
+      maxZoom: 5,
+      maxNativeZoom: 5,
+      tileSize: 256,
+      noWrap: true,
+      continuousWorld: true,
+    });
+
+    console.log('✅ TileLayer created');
+
+    // Добавляем слой на карту
+    tileLayer.current.addTo(leafletMap.current);
+    console.log('✅ TileLayer added');
+
+    // Слушаем события
+    tileLayer.current.on('tileerror', (e: any) => {
+      const url = e.tile ? e.tile.src : 'Unknown';
+      console.error('❌ Tile error:', url);
+    });
+
+    tileLayer.current.on('load', () => {
+      console.log('✅ Tiles loaded successfully!');
+    });
+
+    return () => {
+      if (leafletMap.current) {
+        leafletMap.current.remove();
+        leafletMap.current = null;
+        tileLayer.current = null;
+        markersRef.current = [];
+      }
+    };
+  }, []);
+
+  // Обновление маркеров при изменении filteredEvents
+  useEffect(() => {
+    if (!leafletMap.current) return;
+
+    // Удаляем старые маркеры
+    markersRef.current.forEach(marker => {
+      leafletMap.current?.removeLayer(marker);
+    });
+    markersRef.current = [];
+
+    // Создаем новые маркеры
+    filteredEvents.forEach(event => {
+      const marker = L.marker([event.y, event.x])
+        .addTo(leafletMap.current!)
+        .bindPopup(`
+          <div style="min-width: 200px;">
+            <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">${event.date}</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">${event.title}</div>
+            <div style="font-size: 12px; color: #666;">${event.description}</div>
+          </div>
+        `);
+      markersRef.current.push(marker);
+    });
+
+    console.log(`✅ Markers updated: ${filteredEvents.length} markers`);
+  }, [filteredEvents]);
+
+  // Обновление поиска
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredEvents(eventsData);
+    } else {
+      const query = searchQuery.toLowerCase();
+      setFilteredEvents(eventsData.filter(event =>
+        event.title.toLowerCase().includes(query) ||
+        event.description.toLowerCase().includes(query) ||
+        event.date.toLowerCase().includes(query)
+      ));
+    }
+  }, [searchQuery]);
+
+  const handleZoomIn = () => leafletMap.current?.zoomIn();
+  const handleZoomOut = () => leafletMap.current?.zoomOut();
+
   const handleCenter = () => {
-    setMapCenter([0, 0]);
-    setMapZoom(1);
+    leafletMap.current?.setView([MAP_HEIGHT / 2, MAP_WIDTH / 2], 3);
+  };
+
+  const goToEvent = (event: Event) => {
+    leafletMap.current?.setView([event.y, event.x], 4);
+    // Открываем попап у маркера
+    const markerIndex = filteredEvents.findIndex(e => e.id === event.id);
+    if (markerIndex !== -1 && markersRef.current[markerIndex]) {
+      markersRef.current[markerIndex].openPopup();
+    }
   };
 
   return (
@@ -49,13 +170,8 @@ function App() {
           <h1 className="text-2xl font-bold text-blue-400">Историческая карта 1917</h1>
           <div className="flex gap-2">
             {periods.map((period) => (
-              <button
-                key={period}
-                onClick={() => setSelectedPeriod(period)}
-                className={`px-4 py-2 rounded-lg transition-all ${
-                  selectedPeriod === period ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
+              <button key={period} onClick={() => setSelectedPeriod(period)}
+                className={`px-4 py-2 rounded-lg transition-all ${selectedPeriod === period ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>
                 {period}
               </button>
             ))}
@@ -63,71 +179,41 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-gray-800 border-r border-gray-700 p-4 flex flex-col shrink-0 overflow-y-auto">
-          <h2 className="text-lg font-semibold mb-4 text-gray-300">Слои карты</h2>
-          <div className="space-y-2">
-            {layers.map((layer) => (
-              <button
-                key={layer}
-                onClick={() => setActiveLayer(layer)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
-                  activeLayer === layer ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${activeLayer === layer ? 'bg-white' : 'bg-gray-400'}`} />
-                  {layer}
-                </div>
+        <aside className="w-80 bg-gray-800 border-r border-gray-700 p-4 flex flex-col shrink-0">
+          <h2 className="text-lg font-semibold mb-4 text-gray-300">События Февральской революции</h2>
+          <div className="mb-4">
+            <input type="text" placeholder="Поиск по событиям..." value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500" />
+          </div>
+          <div className="flex-1 overflow-y-auto space-y-2">
+            {filteredEvents.map((event) => (
+              <button key={event.id} onClick={() => goToEvent(event)}
+                className="w-full text-left p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all border-l-4 border-blue-500">
+                <div className="text-sm text-blue-400 font-semibold mb-1">{event.date}</div>
+                <div className="font-medium text-white mb-1">{event.title}</div>
+                <div className="text-sm text-gray-400">{event.description}</div>
               </button>
             ))}
           </div>
-
-          <div className="mt-8 pt-8 border-t border-gray-700">
-             <h3 className="text-sm font-semibold text-gray-400 mb-3">Тестовые действия</h3>
-             <button className="w-full mb-2 px-4 py-2 bg-green-600 rounded-lg">📍 Добавить метку</button>
-             <button className="w-full mb-2 px-4 py-2 bg-purple-600 rounded-lg">📏 Измерить расстояние</button>
-             <button className="w-full mb-2 px-4 py-2 bg-orange-600 rounded-lg">💾 Сохранить вид</button>
-             <button className="w-full px-4 py-2 bg-red-600 rounded-lg">🗑️ Очистить слой</button>
-          </div>
         </aside>
 
-        {/* Map Area */}
-        <main className="flex-1 p-6 relative bg-gray-900">
-          <div className="bg-gray-800 rounded-xl border-2 border-gray-700 h-full w-full overflow-hidden relative">
-            <MapContainer
-              center={mapCenter}
-              zoom={mapZoom}
-              minZoom={0}
-              maxZoom={5}
-              className="h-full w-full"
-              crs={CRS} // <--- Используем наш кастомный CRS
-            >
-              <MapController center={mapCenter} zoom={mapZoom} />
+        {/* Map */}
+        <main className="flex-1 relative bg-gray-900">
+          <div
+            ref={mapRef}
+            className="absolute inset-0 bg-gray-800"
+            style={{ height: '100%', width: '100%' }}
+          />
 
-              {/* Тайлы карты */}
-              <TileLayer
-                url="/docs/tiles/{z}/{x}/{y}.png"
-                minZoom={0}
-                maxZoom={5}
-                // tms={true} УБРАНО, так как мы используем --xyz
-              />
-            </MapContainer>
-          </div>
-
-          {/* Controls Overlay */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-3 bg-gray-800 p-2 rounded-xl border border-gray-700 shadow-xl z-[1000]">
-            <button onClick={handleCenter} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium">
-              Центрировать
-            </button>
-            <button onClick={handleZoomIn} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-bold">
-              +
-            </button>
-            <button onClick={handleZoomOut} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-bold">
-              -
-            </button>
+          {/* Controls */}
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 bg-gray-800 p-2 rounded-xl border border-gray-700 shadow-xl z-[1000]">
+            <button onClick={handleCenter} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition">Центрировать</button>
+            <button onClick={handleZoomIn} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-bold transition">+</button>
+            <button onClick={handleZoomOut} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-bold transition">-</button>
           </div>
         </main>
       </div>
