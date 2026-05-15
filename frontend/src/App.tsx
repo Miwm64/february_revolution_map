@@ -66,8 +66,19 @@ function App() {
     // Устанавливаем минимальный зум так, чтобы нельзя было увидеть серую зону
     const minZoom = leafletMap.current.getBoundsZoom(IMAGE_BOUNDS);
     console.log(leafletMap.current.getBoundsZoom(IMAGE_BOUNDS));
-    leafletMap.current.setMinZoom(minZoom*1.71);
-    leafletMap.current.setMaxZoom(5);
+    
+const REFERENCE_DPR = 2;
+
+const dpr = window.devicePixelRatio || 1;
+
+const multiplier =
+    1.71 * (REFERENCE_DPR / dpr);
+
+leafletMap.current.setMinZoom(
+    minZoom + multiplier
+);
+
+    leafletMap.current.setMaxZoom(7);
 
     // Добавляем TileLayer
     tileLayer.current = L.tileLayer('/tiles/{z}/{x}/{y}.png', {
