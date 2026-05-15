@@ -72,10 +72,10 @@ const REFERENCE_DPR = 2;
 const dpr = window.devicePixelRatio || 1;
 
 const multiplier =
-    1.71 * (REFERENCE_DPR / dpr);
+    2.1 * (REFERENCE_DPR / dpr);
 
 leafletMap.current.setMinZoom(
-    minZoom + multiplier
+    minZoom + Math.log2(multiplier)
 );
 
     leafletMap.current.setMaxZoom(7);
