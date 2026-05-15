@@ -1,9 +1,20 @@
 //src/components/Map.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import './Map.css';
 
+export default function MapController({ center, zoom }: { center: [number, number], zoom: number }) {
+  const map = useMap();
 
-export default function Map() {
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+
+  return null;
+}
+
+
+/*export default function Map() {
   //const width = 1000;
   //const height = Math.round(width * 0.6);
 
@@ -30,8 +41,7 @@ export default function Map() {
       </div>
     </div>
   );
-}
-
+}*/
 /* Рублика проблемсы:
 iframe - внешняя карта и её нельзя измениять и добавлять метри
 

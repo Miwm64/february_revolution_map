@@ -9,6 +9,12 @@ interface EventData {
   [date: string]: string[]; // структура: дата -> список событий
 }
 
+interface EventListProps {
+  backgroundColor?: string;
+  textColor?: string;
+  borderColor?: string;
+}
+
 const data: EventData = {
   '9 марта': [
     'Захват оборонительного пункта',
@@ -21,7 +27,7 @@ const data: EventData = {
   // добавьте свои даты и события
 };
 
-export default function EventList() {
+export default function EventList({ backgroundColor = "bg-white", textColor = "text-black", borderColor = "border-gray-700"}: EventListProps) {
   const [searchText, setSearchText] = useState('');
 
   // фильтрация данных по поиску
@@ -30,25 +36,13 @@ export default function EventList() {
   );
 
   return (
-    <div 
-      className="
-        overflow-y-auto
-      "
-      style={{
-        height: '100%',
-        padding: '10px 30px 10px 10px',
-        backgroundColor: '#f0f0f0',
-        border: '2px solid #333',
-        borderRadius: '8px',
-        boxSizing: 'border-box',
-      }}
-    >
-      <SearchFilter searchText={searchText} setSearchText={setSearchText} />
+    <div className={`${backgroundColor} ${borderColor} p-4`}>
+      <SearchFilter searchText={searchText} setSearchText={setSearchText} borderColor="border-black" textColor={textColor}/>
       {filteredData.length === 0 ? (
-        <div>Нет совпадений</div>
+        <div className={`mb-1 ${textColor}`}>Нет совпадений</div>
       ) : (
         filteredData.map(([date, events], index) => (
-          <DateGroup key={index} date={date} events={events} filterText={searchText} />
+          <DateGroup key={index} date={date} events={events} filterText={searchText} textColor={textColor} />
         ))
       )}
     </div>
