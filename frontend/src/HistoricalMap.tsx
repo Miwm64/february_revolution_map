@@ -33,14 +33,14 @@ const CustomCRS = L.extend(
 );
 
 interface Event {
-    id: number;
-    title: string;
-    date: string;
-    description: string;
-    x: number;
-    y: number;
-    nextEvent?: number;
-    prevEvent?: number;
+  id: number;
+  title: string;
+  description: string;
+  time: string;
+  displayTime: string; // добавляем опционально, так как оно создается динамически
+  coordinates: { x: number; y: number };
+  nextEvent: number | null;
+  prevEvent: number | null;
 }
 
 interface Props {
@@ -170,45 +170,32 @@ export default function HistoricalMap({
     // MARKERS
     // =========================
     useEffect(() => {
-        if (!leafletMap.current)
-            return;
+    if (!leafletMap.current) return;
 
-        markersRef.current.forEach(
-            marker =>
-                leafletMap.current?.removeLayer(
-                    marker
-                )
-        );
-
+        // Удаляем старые маркеры
+        markersRef.current.forEach(marker => leafletMap.current?.removeLayer(marker));
         markersRef.current = [];
 
+        // Создаем новые маркеры
         events.forEach(event => {
-            const marker = L.marker([
-                event.y,
-                event.x,
-            ])
-                .addTo(
-                    leafletMap.current!
-                )
-                .bindPopup(`
-          <div style="min-width: 200px;">
-            <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
-              ${event.date}
-            </div>
-
-            <div style="font-weight: 600; margin-bottom: 4px;">
-              ${event.title}
-            </div>
-
-            <div style="font-size: 12px; color: #666;">
-              ${event.description}
-            </div>
-          </div>
-        `);
-
-            markersRef.current.push(
-                marker
-            );
+            if (event.coordinates?.x != null && event.coordinates?.y != null) {
+                const marker = L.marker([event.coordinates.y, event.coordinates.x]) // координаты
+                    .addTo(leafletMap.current!)
+                    .bindPopup(`
+                        <div style="min-width: 200px;">
+                            <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
+                                ${event.displayTime}
+                            </div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">
+                                ${event.title}
+                            </div>
+                            <div style="font-size: 12px; color: #666;">
+                                ${event.description}
+                            </div>
+                        </div>
+                    `);
+                markersRef.current.push(marker);
+            }
         });
     }, [events]);
 
