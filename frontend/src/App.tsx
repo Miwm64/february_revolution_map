@@ -11,13 +11,11 @@ const CRS = L.extend({}, L.CRS.Simple, {
   transformation: new L.Transformation(1, 0, 1, 0),
 });
 
-// Массив для отображения дат в падеже "Марта"
 const displayMonthNames = [
   'Января', 'Февраля', 'Марта', 'Апреля', 'Мая', 'Июня',
   'Июля', 'Августа', 'Сентября', 'Октября', 'Ноября', 'Декабря'
 ];
 
-// Массив для названий категорий в именительном падеже "Март"
 const categoryMonthNames = [
   'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
@@ -32,19 +30,31 @@ interface Event {
   coordinates: { x: number; y: number };
   nextEvent: number | null;
   prevEvent: number | null;
-  monthKey?: string; // добавляем для группировки
+  monthKey?: string;
 }
 
 function App() {
   const [eventsData, setEventsData] = useState<Event[]>([]);
-  const [eventsForMap, setEventsForMap] = useState<Event[]>([]); // для отображения на карте
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]); // для списка
+  const [eventsForMap, setEventsForMap] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState<string>('Все периоды');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('Все периоды');
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
 
   const periods = ['Февраль', 'Март', 'Апрель', 'Все периоды'];
+
+  const toggleCategory = (category: string) => {
+    setOpenCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     fetch("http://frmap.miwm64.spb.ru/api/events", {
@@ -59,11 +69,11 @@ function App() {
         }
         const processedData = res.data.map((event: Event) => {
           const dateObj = new Date(event.time);
-          const day = String(dateObj.getDate()); // без ведущего нуля
+          const day = String(dateObj.getDate());
           const monthIndex = dateObj.getMonth();
 
           const displayTime = `${day} ${displayMonthNames[monthIndex]} ${dateObj.getFullYear()}`;
-          const monthKey = categoryMonthNames[monthIndex] + ' ' + dateObj.getFullYear(); // например, "Март 1917"
+          const monthKey = categoryMonthNames[monthIndex] + ' ' + dateObj.getFullYear();
 
           return {
             ...event,
@@ -73,7 +83,7 @@ function App() {
         });
 
         setEventsData(processedData);
-        setEventsForMap(processedData); // показывать все события на карте
+        setEventsForMap(processedData);
         setLoading(false);
       })
       .catch(err => {
@@ -82,7 +92,6 @@ function App() {
       });
   }, []);
 
-  // Группировка по месяцам для отображения
   const groupedEvents: Record<string, Event[]> = eventsData.reduce((acc, event) => {
     if (event.monthKey) {
       if (!acc[event.monthKey]) {
@@ -93,7 +102,7 @@ function App() {
     return acc;
   }, {} as Record<string, Event[]>);
 
-  // Обновление событий для отображения на карте при смене периода
+  // Обновление событий для карты при смене периода
   useEffect(() => {
     if (selectedPeriod === 'Все периоды') {
       setEventsForMap(eventsData);
@@ -107,11 +116,10 @@ function App() {
     }
   }, [selectedPeriod, eventsData]);
 
-  // Фильтрация для списка (по поиску)
+  // Фильтр по поиску и периоду
   useEffect(() => {
     let filtered = eventsData;
 
-    // Фильтр по периоду
     if (selectedPeriod !== 'Все периоды') {
       filtered = filtered.filter(event => {
         const monthName = event.monthKey?.split(' ')[0];
@@ -119,7 +127,6 @@ function App() {
       });
     }
 
-    // Фильтр по поиску
     if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(event =>
@@ -132,6 +139,18 @@ function App() {
     setFilteredEvents(filtered);
   }, [searchQuery, eventsData, selectedPeriod]);
 
+  // Создаем сгруппированные по месяцам события из filteredEvents
+  const filteredGroupedEvents: Record<string, Event[]> = filteredEvents.reduce((acc, event) => {
+    if (event.monthKey) {
+      if (!acc[event.monthKey]) {
+        acc[event.monthKey] = [];
+      }
+      acc[event.monthKey].push(event);
+    }
+    return acc;
+  }, {} as Record<string, Event[]>);
+
+  // Отображение
   return (
     <div className="min-h-screen bg-background-creamy text-text-red-brown flex flex-col">
       {/* Header */}
@@ -163,9 +182,9 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
+        {/* Левое меню */}
         <aside
           className="w-64 bg-background-creamy border-r border-gray-700 p-4 flex flex-col shrink-0 overflow-y-auto"
           style={{
@@ -184,22 +203,33 @@ function App() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-4 py-2 bg-background-creamy-button border border-gray-600 rounded-lg mb-4 text-text-red-brown focus:outline-none focus:border-blue-500"
           />
-          
-          {/* Отображение сгруппированных событий по месяцам */}
-          {Object.entries(groupedEvents).map(([month, events]) => (
-            <div key={month}>
-              <h3 className="mt-4 mb-2 text-xl font-bold">{month}</h3>
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
+
+          {/* Группируем по месяцам из filteredEvents */}
+          {Object.entries(filteredGroupedEvents).map(([month, events]) => {
+            const isOpen = openCategories.has(month);
+            return (
+              <div key={month}>
+                {/* Заголовок с кликом */}
+                <h3
+                  className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-center"
+                  onClick={() => toggleCategory(month)}
                 >
-                  <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
-                  <div className="font-medium">{event.title}</div>
-                </div>
-              ))}
-            </div>
-          ))}
+                  <span className="mr-2">{isOpen ? '▼' : '▶'}</span> {month}
+                </h3>
+                {/* Список событий внутри, если открыто */}
+                {isOpen &&
+                  events.map((event) => (
+                    <div
+                      key={event.id}
+                      className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
+                    >
+                      <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
+                      <div className="font-medium">{event.title}</div>
+                    </div>
+                  ))}
+              </div>
+            );
+          })}
         </aside>
 
         {/* Карта */}
