@@ -130,12 +130,8 @@ public class ExecutorService {
             Statement st = db.getStatement();
             ResultSet rs = null;
 
-            // Format LocalDateTime to PostgreSQL format
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String formattedTime = event.time.format(formatter);
-
             String sql = "INSERT INTO events " +
-                    "(title, description, date, x, y, next_event, prev_event, event_type, time_period) VALUES (" +
+                    "(title, description, time, x, y, next_event, prev_event, event_type, time_period) VALUES (" +
                     "'" + event.title + "', " +
                     "'" + event.description + "', " +
                     "'" + event.time + "', " +
@@ -179,11 +175,11 @@ public class ExecutorService {
             }
 
             Statement st = db.getStatement();
-
+            System.out.println("1");
             String sql = "UPDATE events SET " +
                     "title = '" + event.title + "', " +
                     "description = '" + event.description + "', " +
-                    "date = '" + event.time + "', " +
+                    "time = '" + event.time + "', " +
                     "x = " + event.coordinates.x + ", " +
                     "y = " + event.coordinates.y + ", " +
                     "next_event = " + (event.nextEvent != null ? event.nextEvent : "NULL") + ", " +
@@ -195,7 +191,7 @@ public class ExecutorService {
                     ? "'" + event.timePeriod + "'"
                     : "NULL") + " " +
                     "WHERE id = " + event.id + ";";
-
+            System.out.println(sql);
             int updatedRows = st.executeUpdate(sql);
 
             if (updatedRows == 0) {
