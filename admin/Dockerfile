@@ -5,6 +5,7 @@ WORKDIR /app
 # Copy dependency files and install
 COPY package*.json ./
 RUN npm install
+RUN npm install react-leaflet leaflet
 
 # Copy remaining source code
 COPY . .
