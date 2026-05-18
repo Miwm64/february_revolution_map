@@ -101,7 +101,7 @@ export default function HistoricalMap({
         leafletMap.current.setMinZoom(
             minZoom + Math.log2(multiplier)
         );
-        leafletMap.current.setMaxZoom(7);
+        leafletMap.current.setMaxZoom(5);
 
         // TILE LAYER
         tileLayer.current = L.tileLayer('/tiles/{z}/{x}/{y}.png', {

@@ -516,14 +516,22 @@ function App() {
         </aside>
 
         {/* Карта */}
-        <main className="flex-1 p-6 relative bg-background-creamy">
-          <div className="bg-background-creamy rounded-lg border-2 border-gray-700 h-full w-full overflow-hidden relative">
+        <main className="flex-1 bg-background-creamy relative flex flex-col">
+          <div className="flex-1 overflow-hidden relative">
             <HistoricalMap
               events={eventsForMap}
               isMarkerMode={isMarkerMode}
               onMarkerModeChange={setIsMarkerMode}
               visibleEventIds={visibleEventIds}
             />
+          </div>
+          <hr className="border-black" />
+          {/* Место для авторов */}
+          <div
+            className="p-2 font-bold text-text-red-brown tracking-wide leading-tight text-center" 
+            style={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem' }}
+          >
+            Developed by bez.bab: Miwm64 | kessi.kissa | 69n1Ner_ | i11uha
           </div>
         </main>
       </div>
