@@ -29,6 +29,7 @@ interface Event {
     description: string;
     time: string;
     displayTime: string; // добавляем опционально, так как оно создается динамически
+    displayTimeHMS: string;
     coordinates: { x: number; y: number };
     nextEvent: number | null;
     prevEvent: number | null;
@@ -176,7 +177,7 @@ export default function HistoricalMap({
                     .bindPopup(`
                         <div style="min-width: 200px;">
                             <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
-                                ${event.displayTime}
+                                ${event.displayTimeHMS}
                             </div>
                             <div style="font-weight: 600; margin-bottom: 4px;">
                                 ${event.title}

@@ -2,6 +2,7 @@ import './output.css';
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { motion } from 'framer-motion';
 import HistoricalMap from './HistoricalMap';
 import './App.css';
 
@@ -21,6 +22,7 @@ interface Event {
   description: string;
   time: string;
   displayTime: string;
+  displayTimeHMS: string;
   coordinates: { x: number; y: number };
   nextEvent: number | null;
   prevEvent: number | null;
@@ -60,7 +62,13 @@ function App() {
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
   const [isMarkerMode, setIsMarkerMode] = useState(false);
   const [showCategories, setShowCategories] = useState(true);
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
+  const [showMap, setShowMap] = useState(true);
+
+  // Тсссс...
+  const handleLogoClick = () => {
+    setShowMap(prev => !prev);
+  };
 
   // Для отображения меток
   const [visibleEventIds, setVisibleEventIds] = useState<Set<number>>(new Set());
@@ -81,12 +89,27 @@ function App() {
         const dateObj = new Date(event.time);
         const day = String(dateObj.getDate());
         const monthIndex = dateObj.getMonth();
-        const displayTime = `${day} ${displayMonthNames[monthIndex]} ${dateObj.getFullYear()}`;
-        const monthKey = categoryMonthNames[monthIndex] + ' ' + dateObj.getFullYear();
+        const year = dateObj.getFullYear();
+        const hours = dateObj.getHours();
+        const minutes = dateObj.getMinutes();
+        const seconds = dateObj.getSeconds();
+
+        // Одна строка для формирования displayTimeHMS
+        const displayTimeHMS = `${day} ${displayMonthNames[monthIndex]} ${year}, ${
+          hours > 0
+            ? `${hours} ч${minutes > 0 ? ' ' : ''}${minutes > 0 ? `${minutes} мин` : ''}${seconds > 0 ? ' ' : ''}${seconds > 0 ? `${seconds} сек` : ''}`
+            : minutes > 0
+                ? `${minutes} мин${seconds > 0 ? ' ' : ''}${seconds > 0 ? `${seconds} сек` : ''}`
+                : `${seconds} сек`
+        }`;
+
+        const displayTime = `${day} ${displayMonthNames[monthIndex]} ${year}`;
+        const monthKey = categoryMonthNames[monthIndex] + ' ' + year;
         const category = getCategory(event.title, event.description);
-        return {
+          return {
           ...event,
           displayTime,
+          displayTimeHMS,
           monthKey,
           category,
         };
@@ -103,6 +126,13 @@ function App() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+  if (eventsData.length > 0) {
+    const allIds = new Set(eventsData.map(e => e.id));
+    setVisibleEventIds(allIds);
+  }
+}, [eventsData]);
 
   const groupedByCategory: Record<string, Event[]> = eventsData.reduce((acc, event) => {
     const cat = event.category || 'Другие';
@@ -128,15 +158,18 @@ function App() {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(e =>
         e.title.toLowerCase().includes(q) ||
-        e.description.toLowerCase().includes(q) ||
-        e.displayTime.toLowerCase().includes(q)
+        e.displayTime.toLowerCase().includes(q) ||
+        e.time.toLowerCase().includes(q)
       );
     }
-    if (selectedDay && selectedDay !== 'Все дни') {
-      filtered = filtered.filter(e => String(new Date(e.time).getDate()) === selectedDay);
+    if (selectedDays.size > 0 && !selectedDays.has('Все дни')) {
+      filtered = filtered.filter(e => {
+        const dayNumber = String(new Date(e.time).getDate());
+        return selectedDays.has(dayNumber);
+      });
     }
     setFilteredEvents(filtered);
-  }, [searchQuery, eventsData, selectedDay]);
+  }, [searchQuery, eventsData, selectedDays]);
 
   useEffect(() => {
     if (selectedPeriod === 'Все дни') {
@@ -152,12 +185,21 @@ function App() {
   }, [selectedPeriod, eventsData]);
 
   const handleDayClick = (day: string) => {
+    setSelectedDays(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(day)) {
+        newSet.delete(day);
+      } else {
+        newSet.add(day);
+      }
+      return newSet;
+    });
+    // Обновляем выбранный период
     if (day === 'Все дни') {
-      setSelectedDay(null);
+      setSelectedPeriod('Все дни');
     } else {
-      setSelectedDay(day);
+      setSelectedPeriod('Множественный');
     }
-    setSelectedPeriod(day);
   };
 
   const filteredGroupedByCategory: Record<string, Event[]> = filteredEvents.reduce((acc, event) => {
@@ -226,10 +268,15 @@ function App() {
       {/* Заголовок */}
       <header className="bg-background-creamy border-b border-gray-700 p-4 shrink-0" style={{ minHeight: minButtonHeight * 2 }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          
+
           {/* Логотип и название */}
           <div className="flex items-center space-x-4" style={{ flex: 2, minHeight: minButtonHeight * 2 }}>
-            <img src="logo.jpg" alt="Логотип" className="w-18 h-12 object-contain" />
+            <div className="logo-container relative">
+              <img src="logo.jpg" alt="Азоурус" className="w-18 h-12 object-contain cursor-pointer" onClick={handleLogoClick} />
+              <div className="logo-tooltip absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-black text-white text-sm px-3 py-1 rounded-lg opacity-0 pointer-events-none whitespace-nowrap">
+                Историческая карта февральской революции 1917 года
+              </div>
+            </div>
             <h1
               ref={titleRef}
               className="font-bold text-text-red-brown tracking-wide leading-tight"
@@ -260,7 +307,7 @@ function App() {
                         maxHeight: `${maxButtonHeight}px`
                       }}
                       className={`text-sm font-medium whitespace-nowrap flex items-center justify-center
-                        ${selectedPeriod === day ? 'bg-background-red-brown-button text-white' : 'bg-background-creamy-button text-text-red-brown hover:bg-background-red-button'}
+                        ${selectedDays.has(day) ? 'bg-background-red-brown-button text-white' : 'bg-background-creamy-button text-text-red-brown hover:bg-background-red-button'}
                         border-none rounded-lg`}
                     >
                       {day}
@@ -281,7 +328,7 @@ function App() {
                           maxHeight: `${maxButtonHeight}px`
                         }}
                         className={`text-sm font-medium whitespace-nowrap flex items-center justify-center
-                          ${selectedPeriod === day ? 'bg-background-red-brown-button text-white' : 'bg-background-creamy-button text-text-red-brown hover:bg-background-red-button'}
+                          ${selectedDays.has(day) ? 'bg-background-red-brown-button text-white' : 'bg-background-creamy-button text-text-red-brown hover:bg-background-red-button'}
                           border-none rounded-lg`}
                       >
                         {day}
@@ -293,7 +340,10 @@ function App() {
               {/* Кнопка "Все дни" */}
               <div className="flex-shrink-0" style={{ width: 'auto' }}>
                 <button
-                  onClick={() => handleDayClick('Все дни')}
+                  onClick={() => {
+                    setSelectedDays(new Set()); // сброс выбора
+                    setSelectedPeriod('Все дни');
+                  }}
                   style={{
                     height: `${dayButtonHeight * 2 + 2}px`,
                     maxHeight: `${maxButtonHeight * 2}px`
@@ -313,25 +363,39 @@ function App() {
       {/* Основная часть */}
       <div className="flex flex-1 overflow-hidden">
         {/* Левая панель со списком */}
-        <aside className="w-64 bg-background-creamy border-r border-gray-700 p-4 flex flex-col shrink-0 overflow-y-auto"
+        <aside className="w-64 bg-background-creamy border-r border-gray-700 p-4 flex flex-col shrink-0"
           style={{
             backgroundImage: "url(/foncity.png)",
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'bottom left',
             backgroundSize: 'contain',
-            maxHeight: 'calc(100vh - 80px)',
+            maxHeight: 'calc(100vh - 108px)',
           }}
         >
+          {/* Заголовок */}
           <h2 className="text-lg font-semibold mb-4 text-text-red-brown"> События революции </h2>
-          
-          {/* Поиск */}
-          <input
-            type="text"
-            placeholder="Поиск..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 bg-background-creamy-button border border-gray-600 rounded-lg mb-4 text-text-red-brown focus:outline-none focus:border-blue-500"
-          />
+          <div className="mb-2 sticky top-0 bg-background-creamy z-10">
+            {/* Поиск */}
+            <input
+              type="text"
+              placeholder="Поиск..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 bg-background-creamy-button border border-gray-600 rounded-lg mb-4 text-text-red-brown focus:outline-none focus:border-blue-500"
+            />
+            {/* Крестик для очистки */}
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-9/24 transform -translate-y-1/2 text-lg text-[#fb6b4b] hover:text-[#c7492e] focus:outline-none flex items-center justify-center w-6 h-6"
+                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                aria-label="Очистить"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
 
           {/* Переключение отображения */}
           {
@@ -352,11 +416,10 @@ function App() {
                       setVisibleEventIds(new Set(eventsData.map(e => e.id))); // показать все
                     }
                   }}
-                  className={`ml-2 px-2 py-1 text-xs rounded ${
-                    visibleEventIds.size === eventsData.length
-                      ? 'bg-[#fb6b4b] hover:bg-[#c7492e]' // зеленая для галки
-                      : 'bg-[#99f78f] hover:bg-[#12952c]' // красная для креста
-                  }`}
+                  className={`ml-2 px-2 py-1 text-xs rounded ${visibleEventIds.size === eventsData.length
+                      ? 'bg-[#fb6b4b] hover:bg-[#c7492e]' // красная для креста
+                      : 'bg-[#99f78f] hover:bg-[#12952c]' // зеленая для галки 
+                    }`}
                 >
                   {visibleEventIds.size === eventsData.length ? '✕' : '✓'}
                 </button>
@@ -365,11 +428,106 @@ function App() {
           }
 
           {/* Список по категориям или поиск */}
-          {
-            isSearching ? (
-              // Результаты поиска
-              <div>
-                {filteredEvents.map((event) => (
+          <div className="flex-1 overflow-y-auto pr-3">
+            {
+              isSearching ? (
+                // Результаты поиска
+                <div>
+                  {filteredEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
+                          <div className="font-medium">{event.title}</div>
+                        </div>
+                        {/* Чекбокс */}
+                        <input
+                          type="checkbox"
+                          checked={visibleEventIds.has(event.id)}
+                          onChange={() => {
+                            setVisibleEventIds(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(event.id)) {
+                                newSet.delete(event.id);
+                              } else {
+                                newSet.add(event.id);
+                              }
+                              return newSet;
+                            });
+                          }}
+                          title="Показать/скрыть на карте"
+                          className="ml-2"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : showCategories ? (
+                // Категории
+                sortedCategories.map((category) => {
+                  const isOpen = openCategories.has(category);
+                  const eventsInCategory = filteredGroupedByCategory[category] || [];
+                  return (
+                    <div key={category}>
+                      <h3
+                        className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-center"
+                        onClick={() => {
+                          const newSet = new Set(openCategories);
+                          if (newSet.has(category)) {
+                            newSet.delete(category);
+                          } else {
+                            newSet.add(category);
+                          }
+                          setOpenCategories(newSet);
+                        }}
+                      >
+                        <span className="mr-2">{isOpen ? '▼' : '▶'}</span> {category}
+                      </h3>
+                      {isOpen && eventsInCategory.length > 0 &&
+                        eventsInCategory.map((event) => (
+                          <div
+                            key={event.id}
+                            className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
+                                <div className="font-medium">{event.title}</div>
+                              </div>
+                              {/* Чекбокс */}
+                              <input
+                                type="checkbox"
+                                checked={visibleEventIds.has(event.id)}
+                                onChange={() => {
+                                  setVisibleEventIds(prev => {
+                                    const newSet = new Set(prev);
+                                    if (newSet.has(event.id)) {
+                                      newSet.delete(event.id);
+                                    } else {
+                                      newSet.add(event.id);
+                                    }
+                                    return newSet;
+                                  });
+                                }}
+                                title="Показать/скрыть на карте"
+                                className="ml-2"
+                              />
+                            </div>
+                          </div>
+                        ))
+                      }
+                      {isOpen && eventsInCategory.length === 0 && (
+                        <div className="ml-4 text-text-red-brown">Нет событий</div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                // Весь список без группировки
+                filteredEvents.map((event) => (
                   <div
                     key={event.id}
                     className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
@@ -399,103 +557,10 @@ function App() {
                       />
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : showCategories ? (
-              // Категории
-              sortedCategories.map((category) => {
-                const isOpen = openCategories.has(category);
-                const eventsInCategory = filteredGroupedByCategory[category] || [];
-                return (
-                  <div key={category}>
-                    <h3
-                      className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-center"
-                      onClick={() => {
-                        const newSet = new Set(openCategories);
-                        if (newSet.has(category)) {
-                          newSet.delete(category);
-                        } else {
-                          newSet.add(category);
-                        }
-                        setOpenCategories(newSet);
-                      }}
-                    >
-                      <span className="mr-2">{isOpen ? '▼' : '▶'}</span> {category}
-                    </h3>
-                    {isOpen && eventsInCategory.length > 0 &&
-                      eventsInCategory.map((event) => (
-                        <div
-                          key={event.id}
-                          className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
-                              <div className="font-medium">{event.title}</div>
-                            </div>
-                            {/* Чекбокс */}
-                            <input
-                              type="checkbox"
-                              checked={visibleEventIds.has(event.id)}
-                              onChange={() => {
-                                setVisibleEventIds(prev => {
-                                  const newSet = new Set(prev);
-                                  if (newSet.has(event.id)) {
-                                    newSet.delete(event.id);
-                                  } else {
-                                    newSet.add(event.id);
-                                  }
-                                  return newSet;
-                                });
-                              }}
-                              title="Показать/скрыть на карте"
-                              className="ml-2"
-                            />
-                          </div>
-                        </div>
-                      ))
-                    }
-                    {isOpen && eventsInCategory.length === 0 && (
-                      <div className="ml-4 text-text-red-brown">Нет событий</div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              // Весь список без группировки
-              filteredEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
-                      <div className="font-medium">{event.title}</div>
-                    </div>
-                    {/* Чекбокс */}
-                    <input
-                      type="checkbox"
-                      checked={visibleEventIds.has(event.id)}
-                      onChange={() => {
-                        setVisibleEventIds(prev => {
-                          const newSet = new Set(prev);
-                          if (newSet.has(event.id)) {
-                            newSet.delete(event.id);
-                          } else {
-                            newSet.add(event.id);
-                          }
-                          return newSet;
-                        });
-                      }}
-                      title="Показать/скрыть на карте"
-                      className="ml-2"
-                    />
-                  </div>
-                </div>
-              ))
-            )
-          }
+                ))
+              )
+            }
+          </div>
 
           {/* Меню снизу */}
           <div className="mt-auto pt-4 flex flex-col space-y-2">
@@ -505,8 +570,8 @@ function App() {
             >
               📍 Поставить метку
             </button>
-            {/* Можно оставить или убрать */}
-            {/*<button
+            {/* Можно оставить или убрать */
+            /*<button
               onClick={handleMeasureDistance}
               className="px-3 py-2 bg-[#5D4037] text-white rounded-lg hover:bg-[#4E342E]"
             >
@@ -517,18 +582,36 @@ function App() {
 
         {/* Карта */}
         <main className="flex-1 bg-background-creamy relative flex flex-col">
-          <div className="flex-1 overflow-hidden relative">
-            <HistoricalMap
-              events={eventsForMap}
-              isMarkerMode={isMarkerMode}
-              onMarkerModeChange={setIsMarkerMode}
-              visibleEventIds={visibleEventIds}
-            />
-          </div>
+          {showMap ? (
+            <div className="flex-1 overflow-hidden relative">
+              <HistoricalMap
+                events={eventsForMap}
+                isMarkerMode={isMarkerMode}
+                onMarkerModeChange={setIsMarkerMode}
+                visibleEventIds={visibleEventIds}
+              />
+            </div>
+          ) : (
+
+            <div className="flex-1 flex items-center justify-center relative overflow-hidden" style={{ maxWidth: '100vw', maxHeight: '100vh' }}>
+              <motion.div
+                className="w-full h-full flex items-center justify-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+              >
+                <img
+                  src="Azourus.jpg"
+                  alt="Спонсор"
+                  className="max-w-full max-h-full object-contain"
+                />
+              </motion.div>
+            </div>
+          )}
           <hr className="border-black" />
           {/* Место для авторов */}
           <div
-            className="p-2 font-bold text-text-red-brown tracking-wide leading-tight text-center" 
+            className="p-2 font-bold text-text-red-brown tracking-wide leading-tight text-center"
             style={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem' }}
           >
             Developed by bez.bab: Miwm64 | kessi.kissa | 69n1Ner_ | i11uha
