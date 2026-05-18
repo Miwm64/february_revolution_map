@@ -229,11 +229,11 @@ function App() {
           
           {/* Логотип и название */}
           <div className="flex items-center space-x-4" style={{ flex: 2, minHeight: minButtonHeight * 2 }}>
-            <img src="logo.jpg" alt="Логотип" className="w-18 h-12 object-contain" />
+            <img src="logo.jpg" alt="Логотип" className="object-contain" style={{ height: minButtonHeight * 2 }}/>
             <h1
               ref={titleRef}
               className="font-bold text-text-red-brown tracking-wide leading-tight"
-              style={{ fontFamily: 'Georgia, serif', fontSize: '1.8rem' }}
+              style={{ fontFamily: 'Georgia, serif', fontSize: '1.7rem' }}
             >
               Историческая карта февральской революции 1917 года
             </h1>
@@ -313,7 +313,7 @@ function App() {
       {/* Основная часть */}
       <div className="flex flex-1 overflow-hidden">
         {/* Левая панель со списком */}
-        <aside className="w-64 bg-background-creamy border-r border-gray-700 p-4 flex flex-col shrink-0 overflow-y-auto"
+        <aside className="w-64 bg-background-creamy border-r border-gray-700 p-4 flex flex-col shrink-0"
           style={{
             backgroundImage: "url(/foncity.png)",
             backgroundRepeat: 'no-repeat',
@@ -322,51 +322,55 @@ function App() {
             maxHeight: 'calc(100vh - 80px)',
           }}
         >
+          {/* Заголовок */}
           <h2 className="text-lg font-semibold mb-4 text-text-red-brown"> События революции </h2>
           
-          {/* Поиск */}
-          <input
-            type="text"
-            placeholder="Поиск..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 bg-background-creamy-button border border-gray-600 rounded-lg mb-4 text-text-red-brown focus:outline-none focus:border-blue-500"
-          />
+          {/* Кнопки поиска и переключения - закрепляем сверху */}
+          <div className="mb-2 sticky top-0 bg-background-creamy z-10">
+            {/* Поиск */}
+            <input
+              type="text"
+              placeholder="Поиск..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 bg-background-creamy-button border border-gray-600 rounded-lg mb-4 text-text-red-brown focus:outline-none focus:border-blue-500"
+            />
 
-          {/* Переключение отображения */}
-          {
-            !isSearching && (
-              <div className="flex items-center mb-2">
-                <button
-                  onClick={toggleDisplayMode}
-                  className="flex-1 px-2 py-2 rounded-lg bg-[#5D4037] text-white hover:bg-[#4E342E]"
-                >
-                  {showCategories ? 'Сортировать по дате' : 'Сортировать по категориям'}
-                </button>
-                {/* Маленькая кнопка "Показать все/скрыть все метки" */}
-                <button
-                  onClick={() => {
-                    if (visibleEventIds.size === eventsData.length) {
-                      setVisibleEventIds(new Set()); // скрыть все
-                    } else {
-                      setVisibleEventIds(new Set(eventsData.map(e => e.id))); // показать все
-                    }
-                  }}
-                  className={`ml-2 px-2 py-1 text-xs rounded ${
-                    visibleEventIds.size === eventsData.length
-                      ? 'bg-[#fb6b4b] hover:bg-[#c7492e]' // зеленая для галки
-                      : 'bg-[#99f78f] hover:bg-[#12952c]' // красная для креста
-                  }`}
-                >
-                  {visibleEventIds.size === eventsData.length ? '✕' : '✓'}
-                </button>
-              </div>
-            )
-          }
+            {/* Переключение отображения */}
+            {
+              !isSearching && (
+                <div className="flex items-center mb-2">
+                  <button
+                    onClick={toggleDisplayMode}
+                    className="flex-1 px-2 py-2 rounded-lg bg-[#5D4037] text-white hover:bg-[#4E342E]"
+                  >
+                    {showCategories ? 'Сортировать по дате' : 'Сортировать по категориям'}
+                  </button>
+                  {/* Маленькая кнопка "Показать все/скрыть все метки" */}
+                  <button
+                    onClick={() => {
+                      if (visibleEventIds.size === eventsData.length) {
+                        setVisibleEventIds(new Set()); // скрыть все
+                      } else {
+                        setVisibleEventIds(new Set(eventsData.map(e => e.id))); // показать все
+                      }
+                    }}
+                    className={`ml-2 px-2 py-1 text-xs rounded ${
+                      visibleEventIds.size === eventsData.length
+                        ? 'bg-[#fb6b4b] hover:bg-[#c7492e]' // зеленая для галки
+                        : 'bg-[#99f78f] hover:bg-[#12952c]' // красная для креста
+                    }`}
+                  >
+                    {visibleEventIds.size === eventsData.length ? '✕' : '✓'}
+                  </button>
+                </div>
+              )
+            }
+          </div>
 
-          {/* Список по категориям или поиск */}
-          {
-            isSearching ? (
+          {/* Основной список с прокруткой */}
+          <div className="flex-1 overflow-y-auto pr-3">
+            {isSearching ? (
               // Результаты поиска
               <div>
                 {filteredEvents.map((event) => (
@@ -494,36 +498,27 @@ function App() {
                   </div>
                 </div>
               ))
-            )
-          }
-
-          {/* Меню снизу */}
-          <div className="mt-auto pt-4 flex flex-col space-y-2">
-            <button
-              onClick={handleSetMarker}
-              className={`px-3 py-2 rounded-lg transition-all ${isMarkerMode ? 'bg-orange-500 text-white' : 'bg-[#8B4513] text-white hover:bg-[#70360F]'}`}
-            >
-              📍 Поставить метку
-            </button>
-            {/* Можно оставить или убрать */}
-            {/*<button
-              onClick={handleMeasureDistance}
-              className="px-3 py-2 bg-[#5D4037] text-white rounded-lg hover:bg-[#4E342E]"
-            >
-              📏 Измерить расстояние
-            </button>*/}
+            )}
           </div>
         </aside>
 
         {/* Карта */}
-        <main className="flex-1 p-6 relative bg-background-creamy">
-          <div className="bg-background-creamy rounded-lg border-2 border-gray-700 h-full w-full overflow-hidden relative">
+        <main className="flex-1 bg-background-creamy relative flex flex-col">
+          <div className="flex-1 overflow-hidden relative">
             <HistoricalMap
               events={eventsForMap}
               isMarkerMode={isMarkerMode}
               onMarkerModeChange={setIsMarkerMode}
               visibleEventIds={visibleEventIds}
             />
+          </div>
+          <hr className="border-black" />
+          {/* Место для авторов */}
+          <div
+            className="p-2 font-bold text-text-red-brown tracking-wide leading-tight text-center" 
+            style={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem' }}
+          >
+            Developed by bez.bab: Miwm64 | kessi.kissa | 69n1Ner_ | i11uha
           </div>
         </main>
       </div>
