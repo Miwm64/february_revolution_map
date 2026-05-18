@@ -41,7 +41,7 @@ public class ExecutorService {
                         rs.getInt("id"),
                         rs.getString("title"),
                         rs.getString("description"),
-                        rs.getDate("date").toLocalDate(),
+                        rs.getDate("time").toLocalDate(),
                         new Point(
                                 rs.getDouble("x"),
                                 rs.getDouble("y")
@@ -72,13 +72,15 @@ public class ExecutorService {
         try {
             Statement st = db.getStatement();
             ResultSet rs = st.executeQuery("SELECT * FROM events where id=" + id + ";");
-
+            System.out.println(1);
+            System.out.println("SELECT * FROM events where id=" + id + ";");
             if (rs.next()) {
+            System.out.println(2);
                 event = new Event(
                         rs.getInt("id"),
                         rs.getString("title"),
                         rs.getString("description"),
-                        rs.getDate("date").toLocalDate(),
+                        rs.getDate("time").toLocalDate(),
                         new Point(
                                 rs.getDouble("x"),
                                 rs.getDouble("y")
