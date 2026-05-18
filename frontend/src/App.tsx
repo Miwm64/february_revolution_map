@@ -64,6 +64,11 @@ function App() {
   const [showCategories, setShowCategories] = useState(true);
   const [selectedDays, setSelectedDays] = useState<Set<string>>(new Set());
   const [showMap, setShowMap] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
+  const [displayMode, setDisplayMode] = useState<'popup' | 'panel'>('popup');
+
+
 
   // Тсссс...
   const handleLogoClick = () => {
@@ -97,10 +102,10 @@ function App() {
         // Одна строка для формирования displayTimeHMS
         const displayTimeHMS = `${day} ${displayMonthNames[monthIndex]} ${year}, ${
           hours > 0
-            ? `${hours} ч${minutes > 0 ? ' ' : ''}${minutes > 0 ? `${minutes} мин` : ''}${seconds > 0 ? ' ' : ''}${seconds > 0 ? `${seconds} сек` : ''}`
+            ? `${hours}:${minutes > 0 ? `${minutes}:` : '00'}${seconds > 0 ? `${seconds}` : '00'}`
             : minutes > 0
-                ? `${minutes} мин${seconds > 0 ? ' ' : ''}${seconds > 0 ? `${seconds} сек` : ''}`
-                : `${seconds} сек`
+                ? `${minutes}:${seconds > 0 ? `${seconds}` : '00'}`
+                : `${seconds > 0 ? `${seconds}` : '00:00:00'}`
         }`;
 
         const displayTime = `${day} ${displayMonthNames[monthIndex]} ${year}`;
@@ -172,17 +177,28 @@ function App() {
   }, [searchQuery, eventsData, selectedDays]);
 
   useEffect(() => {
-    if (selectedPeriod === 'Все дни') {
-      setEventsForMap(eventsData);
-    } else {
+    let filtered = eventsData;
+
+    // Фильтрация по выбранному периоду (день или «Все дни»)
+    if (selectedPeriod !== 'Все дни') {
       const dayNum = parseInt(selectedPeriod, 10);
       if (!isNaN(dayNum)) {
-        setEventsForMap(eventsData.filter(e => String(new Date(e.time).getDate()) === String(dayNum)));
-      } else {
-        setEventsForMap(eventsData);
+        filtered = filtered.filter(e =>
+          String(new Date(e.time).getDate()) === String(dayNum)
+        );
       }
     }
-  }, [selectedPeriod, eventsData]);
+
+    // Дополнительная фильтрация по выбранным дням (множественный выбор)
+    if (selectedDays.size > 0 && !selectedDays.has('Все дни')) {
+      filtered = filtered.filter(e => {
+        const dayNumber = String(new Date(e.time).getDate());
+        return selectedDays.has(dayNumber);
+      });
+    }
+
+    setEventsForMap(filtered);
+  }, [selectedPeriod, selectedDays, eventsData]);
 
   const handleDayClick = (day: string) => {
     setSelectedDays(prev => {
@@ -192,15 +208,24 @@ function App() {
       } else {
         newSet.add(day);
       }
+
+      // Если после изменения набор дней пуст, устанавливаем период «Все дни»
+      if (newSet.size === 0) {
+        setSelectedPeriod('Все дни');
+      } else {
+        // В противном случае устанавливаем период «Множественный»
+        setSelectedPeriod('Множественный');
+      }
+
       return newSet;
     });
-    // Обновляем выбранный период
-    if (day === 'Все дни') {
-      setSelectedPeriod('Все дни');
-    } else {
-      setSelectedPeriod('Множественный');
-    }
   };
+
+  useEffect(() => {
+    if (selectedDays.size === 0) {
+      setSelectedPeriod('Все дни');
+    }
+  }, [selectedDays]);
 
   const filteredGroupedByCategory: Record<string, Event[]> = filteredEvents.reduce((acc, event) => {
     const cat = event.category || 'Другие';
@@ -583,19 +608,26 @@ function App() {
         {/* Карта */}
         <main className="flex-1 bg-background-creamy relative flex flex-col">
           {showMap ? (
-            <div className="flex-1 overflow-hidden relative">
+            <div className="flex-1 overflow-hidden relative" style={{ zIndex: 0 }}>
               <HistoricalMap
                 events={eventsForMap}
                 isMarkerMode={isMarkerMode}
                 onMarkerModeChange={setIsMarkerMode}
                 visibleEventIds={visibleEventIds}
+  displayMode={displayMode} 
+                onEventClick={(event) => {
+    setSelectedEvent(event);
+    setIsDetailPanelOpen(true);
+    setDisplayMode('panel');
+                }}
               />
+
             </div>
           ) : (
 
-            <div className="flex-1 flex items-center justify-center relative overflow-hidden" style={{ maxWidth: '100vw', maxHeight: '100vh' }}>
+            <div className="flex-1 flex items-center justify-center relative overflow-hidden" style={{ maxWidth: '100vw', maxHeight: 'calc(100vh - 156px)' }}>
               <motion.div
-                className="w-full h-full flex items-center justify-center"
+                className="w-full h-full flex items-center justify-center box-border"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -616,6 +648,62 @@ function App() {
           >
             Developed by bez.bab: Miwm64 | kessi.kissa | 69n1Ner_ | i11uha
           </div>
+
+          {isDetailPanelOpen && selectedEvent && showMap && (
+  <div className="absolute right-0 top-0 h-full w-64 bg-background-creamy border-l border-gray-300 rounded-lg opacity-85 shadow-lg z-50 p-4 overflow-y-auto" style={{ zIndex: 60, maxHeight: 'calc(100vh - 156px)'}}>
+    <div className="flex justify-between items-center mb-4">
+  <h3 className="text-lg font-semibold text-text-red-brown">
+    {selectedEvent.title}
+  </h3>
+  <div className="flex space-x-2">
+    <button
+      onClick={() => {
+        setIsDetailPanelOpen(false); // Скрываем панель
+        setDisplayMode('popup');   // Переключаем режим обратно
+      }}
+      className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+    >
+      Свернуть
+    </button>
+    <button
+      onClick={() => setIsDetailPanelOpen(false)}
+      className="text-gray-500 hover:text-gray-700"
+    >
+      ✕
+    </button>
+  </div>
+</div>
+
+    <div className="space-y-3">
+      <div>
+        <span className="font-semibold text-text-red-brown">Дата:</span>
+        <p>{selectedEvent.displayTimeHMS}</p>
+      </div>
+      <div>
+        <span className="font-semibold text-text-red-brown">Категория:</span>
+        <p>{selectedEvent.category || 'Не указана'}</p>
+      </div>
+      <div>
+        <span className="font-semibold text-text-red-brown">Описание:</span>
+        <p className="whitespace-pre-line">{selectedEvent.description}</p>
+      </div>
+      {selectedEvent.prevEvent && (
+        <div>
+          <span className="font-semibold text-text-red-brown">Предыдущее событие:</span>
+          <p>ID: {selectedEvent.prevEvent}</p>
+        </div>
+      )}
+      {selectedEvent.nextEvent && (
+        <div>
+          <span className="font-semibold text-text-red-brown">Следующее событие:</span>
+          <p>ID: {selectedEvent.nextEvent}</p>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+
         </main>
       </div>
     </div>

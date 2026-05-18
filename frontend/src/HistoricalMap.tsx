@@ -38,8 +38,10 @@ interface Event {
 interface Props {
     events: Event[];
     isMarkerMode: boolean;
-    onMarkerModeChange: (isEnabled: boolean) => void; // callback
-    visibleEventIds: Set<number>; // новый проп
+    onMarkerModeChange: (isEnabled: boolean) => void;
+    visibleEventIds: Set<number>;
+    displayMode: string;
+    onEventClick: (event: Event) => void; // новый проп
 }
 
 export default function HistoricalMap({
@@ -47,6 +49,8 @@ export default function HistoricalMap({
     isMarkerMode,
     onMarkerModeChange,
     visibleEventIds, // получаем
+    displayMode,
+    onEventClick
 }: Props) {
     const mapRef = useRef<HTMLDivElement>(null);
     const leafletMap = useRef<L.Map | null>(null);
@@ -165,32 +169,89 @@ export default function HistoricalMap({
         markersRef.current.forEach(marker => leafletMap.current?.removeLayer(marker));
         markersRef.current = [];
 
-        // Создаем новые маркеры только для видимых
+        // Создаём новые маркеры только для видимых
         events.forEach(event => {
             if (
                 event.coordinates?.x != null &&
                 event.coordinates?.y != null &&
-                visibleEventIds.has(event.id) // проверка
+                visibleEventIds.has(event.id)
             ) {
-                const marker = L.marker([event.coordinates.y, event.coordinates.x], { icon: createCustomIcon() })
+                const marker = L.marker([event.coordinates.y, event.coordinates.x], {
+                    icon: createCustomIcon()
+                })
                     .addTo(leafletMap.current!)
-                    .bindPopup(`
-                        <div style="min-width: 200px;">
-                            <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
-                                ${event.displayTimeHMS}
-                            </div>
-                            <div style="font-weight: 600; margin-bottom: 4px;">
-                                ${event.title}
-                            </div>
-                            <div style="font-size: 12px; color: #666;">
-                                ${event.description}
-                            </div>
-                        </div>
-                    `);
+                    .bindPopup((instance) => {
+  const container = L.DomUtil.create('div', 'popup-container');
+
+  // Если режим 'panel', показываем краткое описание и кнопку «Подробнее»
+  if (displayMode === 'popup') {
+    container.innerHTML = `
+      <div style="min-width: 200px;">
+        <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
+          ${event.displayTimeHMS}
+        </div>
+        <div style="font-weight: 600; margin-bottom: 4px;">
+          ${event.title}
+        </div>
+        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+          ${event.description.substring(0, 100)}...
+        </div>
+        <button
+          class="details-button"
+          data-event-id="${event.id}"
+          style="background: #fb6b4b; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;"
+        >
+          Подробнее
+        </button>
+      </div>
+    `;
+  } else {
+    // Если режим 'panel', показываем только заголовок и краткое описание
+    container.innerHTML = `
+      <div style="min-width: 200px;">
+        <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
+          ${event.displayTimeHMS}
+        </div>
+        <div style="font-weight: 600; margin-bottom: 4px;">
+          ${event.title}
+        </div>
+        <div style="font-size: 12px; color: #666;">
+          (Открыта полная панель)
+        </div>
+      </div>
+    `;
+  }
+
+  const handleClick = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('details-button')) {
+      onEventClick(event);
+    }
+  };
+
+  container.addEventListener('click', handleClick);
+  (container as any)._handleClick = handleClick;
+  return container;
+});
+
+
+                // Сохраняем маркер
                 markersRef.current.push(marker);
             }
         });
-    }, [events, visibleEventIds]);
+
+        // Функция очистки
+        return () => {
+            // Удаляем все маркеры
+            markersRef.current.forEach(marker => {
+                leafletMap.current?.removeLayer(marker);
+            });
+            markersRef.current = [];
+        };
+    }, [events, visibleEventIds, onEventClick]);
+
+
+
 
     useEffect(() => {
         isMarkerModeRef.current = isMarkerMode;
