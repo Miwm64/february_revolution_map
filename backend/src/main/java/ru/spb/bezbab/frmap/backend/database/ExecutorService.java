@@ -1,5 +1,6 @@
 package ru.spb.bezbab.frmap.backend.database;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.spb.bezbab.frmap.backend.entities.Event;
@@ -18,7 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 
-@Service
+
 public class ExecutorService {
     DataBase db;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -131,14 +132,21 @@ public class ExecutorService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             String formattedTime = event.time.format(formatter);
 
-            String sql = "INSERT INTO events (title, description, time, x, y, next_event, prev_event) VALUES (" +
+            String sql = "INSERT INTO events " +
+                    "(title, description, date, x, y, next_event, prev_event, event_type, time_period) VALUES (" +
                     "'" + event.title + "', " +
                     "'" + event.description + "', " +
-                    "'" + formattedTime + "', " +
+                    "'" + event.time + "', " +
                     event.coordinates.x + ", " +
                     event.coordinates.y + ", " +
                     (event.nextEvent != null ? event.nextEvent : "NULL") + ", " +
-                    (event.prevEvent != null ? event.prevEvent : "NULL") +
+                    (event.prevEvent != null ? event.prevEvent : "NULL") + ", " +
+                    (event.eventType != null
+                            ? "'" + event.eventType + "'"
+                            : "NULL") + ", " +
+                    (event.timePeriod != null
+                            ? "'" + event.timePeriod + "'"
+                            : "NULL") +
                     ") RETURNING id";
 
             rs = st.executeQuery(sql);
