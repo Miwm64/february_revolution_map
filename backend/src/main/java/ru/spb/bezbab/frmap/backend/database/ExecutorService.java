@@ -173,11 +173,17 @@ public class ExecutorService {
             String sql = "UPDATE events SET " +
                     "title = '" + event.title + "', " +
                     "description = '" + event.description + "', " +
-                    "time = '" + event.time + "', " +
+                    "date = '" + event.time + "', " +
                     "x = " + event.coordinates.x + ", " +
                     "y = " + event.coordinates.y + ", " +
                     "next_event = " + (event.nextEvent != null ? event.nextEvent : "NULL") + ", " +
-                    "prev_event = " + (event.prevEvent != null ? event.prevEvent : "NULL") + " " +
+                    "prev_event = " + (event.prevEvent != null ? event.prevEvent : "NULL") + ", " +
+                    "event_type = " + (event.eventType != null
+                    ? "'" + event.eventType + "'"
+                    : "NULL") + ", " +
+                    "time_period = " + (event.timePeriod != null
+                    ? "'" + event.timePeriod + "'"
+                    : "NULL") + " " +
                     "WHERE id = " + event.id + ";";
 
             int updatedRows = st.executeUpdate(sql);
