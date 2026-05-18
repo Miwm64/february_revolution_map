@@ -1,9 +1,6 @@
 package ru.spb.bezbab.frmap.backend.controllers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +27,8 @@ public class EventsController {
 
     @PostMapping("/event")
     public Map<String, Event> getEvent(@RequestBody EventRequest eventRequest) {
+        System.out.println(eventRequest);
+        System.out.println(eventRequest.getId());
         Event result = executorService.getEvent(eventRequest.getId());
         HashMap<String, Event> response = new HashMap<>();
         response.put("data", result);

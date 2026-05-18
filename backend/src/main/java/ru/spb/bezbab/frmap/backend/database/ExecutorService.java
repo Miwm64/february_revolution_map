@@ -1,9 +1,12 @@
 package ru.spb.bezbab.frmap.backend.database;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.spb.bezbab.frmap.backend.entities.Event;
+import ru.spb.bezbab.frmap.backend.entities.EventType;
 import ru.spb.bezbab.frmap.backend.entities.Point;
+import ru.spb.bezbab.frmap.backend.entities.TimePeriod;
 
 import java.security.SecureRandom;
 import java.sql.ResultSet;
@@ -16,7 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 
-@Service
+
 public class ExecutorService {
     DataBase db;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -38,14 +41,21 @@ public class ExecutorService {
                         rs.getInt("id"),
                         rs.getString("title"),
                         rs.getString("description"),
-                        rs.getTimestamp("time").toLocalDateTime(),
+                        rs.getDate("time").toLocalDate(),
                         new Point(
                                 rs.getDouble("x"),
                                 rs.getDouble("y")
                         ),
                         rs.getObject("next_event", Integer.class),
-                        rs.getObject("prev_event", Integer.class)
+                        rs.getObject("prev_event", Integer.class),
+                        rs.getString("event_type") != null
+                                ? EventType.valueOf(rs.getString("event_type"))
+                                : null,
+                        rs.getString("time_period") != null
+                                ? TimePeriod.valueOf(rs.getString("time_period"))
+                                : null
                 );
+
                 events.add(event);
             }
             st.close();
@@ -62,19 +72,27 @@ public class ExecutorService {
         try {
             Statement st = db.getStatement();
             ResultSet rs = st.executeQuery("SELECT * FROM events where id=" + id + ";");
-
+            System.out.println(1);
+            System.out.println("SELECT * FROM events where id=" + id + ";");
             if (rs.next()) {
+            System.out.println(2);
                 event = new Event(
                         rs.getInt("id"),
                         rs.getString("title"),
                         rs.getString("description"),
-                        rs.getTimestamp("time").toLocalDateTime(),
+                        rs.getDate("time").toLocalDate(),
                         new Point(
                                 rs.getDouble("x"),
                                 rs.getDouble("y")
                         ),
                         rs.getObject("next_event", Integer.class),
-                        rs.getObject("prev_event", Integer.class)
+                        rs.getObject("prev_event", Integer.class),
+                        rs.getString("event_type") != null
+                                ? EventType.valueOf(rs.getString("event_type"))
+                                : null,
+                        rs.getString("time_period") != null
+                                ? TimePeriod.valueOf(rs.getString("time_period"))
+                                : null
                 );
             }
             st.close();
@@ -112,18 +130,21 @@ public class ExecutorService {
             Statement st = db.getStatement();
             ResultSet rs = null;
 
-            // Format LocalDateTime to PostgreSQL format
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            String formattedTime = event.time.format(formatter);
-
-            String sql = "INSERT INTO events (title, description, time, x, y, next_event, prev_event) VALUES (" +
+            String sql = "INSERT INTO events " +
+                    "(title, description, time, x, y, next_event, prev_event, event_type, time_period) VALUES (" +
                     "'" + event.title + "', " +
                     "'" + event.description + "', " +
-                    "'" + formattedTime + "', " +
+                    "'" + event.time + "', " +
                     event.coordinates.x + ", " +
                     event.coordinates.y + ", " +
                     (event.nextEvent != null ? event.nextEvent : "NULL") + ", " +
-                    (event.prevEvent != null ? event.prevEvent : "NULL") +
+                    (event.prevEvent != null ? event.prevEvent : "NULL") + ", " +
+                    (event.eventType != null
+                            ? "'" + event.eventType + "'"
+                            : "NULL") + ", " +
+                    (event.timePeriod != null
+                            ? "'" + event.timePeriod + "'"
+                            : "NULL") +
                     ") RETURNING id";
 
             rs = st.executeQuery(sql);
@@ -154,7 +175,7 @@ public class ExecutorService {
             }
 
             Statement st = db.getStatement();
-
+            System.out.println("1");
             String sql = "UPDATE events SET " +
                     "title = '" + event.title + "', " +
                     "description = '" + event.description + "', " +
@@ -162,9 +183,15 @@ public class ExecutorService {
                     "x = " + event.coordinates.x + ", " +
                     "y = " + event.coordinates.y + ", " +
                     "next_event = " + (event.nextEvent != null ? event.nextEvent : "NULL") + ", " +
-                    "prev_event = " + (event.prevEvent != null ? event.prevEvent : "NULL") + " " +
+                    "prev_event = " + (event.prevEvent != null ? event.prevEvent : "NULL") + ", " +
+                    "event_type = " + (event.eventType != null
+                    ? "'" + event.eventType + "'"
+                    : "NULL") + ", " +
+                    "time_period = " + (event.timePeriod != null
+                    ? "'" + event.timePeriod + "'"
+                    : "NULL") + " " +
                     "WHERE id = " + event.id + ";";
-
+            System.out.println(sql);
             int updatedRows = st.executeUpdate(sql);
 
             if (updatedRows == 0) {
