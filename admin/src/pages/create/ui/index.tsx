@@ -100,8 +100,8 @@ const CreatePage = () => {
     // ================= SANITIZE BEFORE SEND =================
     const sanitizeEvent = (event: Event) => ({
         ...event,
-        eventType: event.eventType === "" ? null : event.eventType,
-        timePeriod: event.timePeriod === "" ? null : event.timePeriod,
+        eventType: event.eventType ?? null,
+        timePeriod: event.timePeriod ?? null,
     });
 
     const handleCreate = () => {
