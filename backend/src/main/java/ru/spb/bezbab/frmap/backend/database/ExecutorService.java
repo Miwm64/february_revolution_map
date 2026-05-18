@@ -3,7 +3,9 @@ package ru.spb.bezbab.frmap.backend.database;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.spb.bezbab.frmap.backend.entities.Event;
+import ru.spb.bezbab.frmap.backend.entities.EventType;
 import ru.spb.bezbab.frmap.backend.entities.Point;
+import ru.spb.bezbab.frmap.backend.entities.TimePeriod;
 
 import java.security.SecureRandom;
 import java.sql.ResultSet;
@@ -38,14 +40,21 @@ public class ExecutorService {
                         rs.getInt("id"),
                         rs.getString("title"),
                         rs.getString("description"),
-                        rs.getTimestamp("time").toLocalDateTime(),
+                        rs.getDate("date").toLocalDate(),
                         new Point(
                                 rs.getDouble("x"),
                                 rs.getDouble("y")
                         ),
                         rs.getObject("next_event", Integer.class),
-                        rs.getObject("prev_event", Integer.class)
+                        rs.getObject("prev_event", Integer.class),
+                        rs.getString("event_type") != null
+                                ? EventType.valueOf(rs.getString("event_type"))
+                                : null,
+                        rs.getString("time_period") != null
+                                ? TimePeriod.valueOf(rs.getString("time_period"))
+                                : null
                 );
+
                 events.add(event);
             }
             st.close();
@@ -68,13 +77,19 @@ public class ExecutorService {
                         rs.getInt("id"),
                         rs.getString("title"),
                         rs.getString("description"),
-                        rs.getTimestamp("time").toLocalDateTime(),
+                        rs.getDate("date").toLocalDate(),
                         new Point(
                                 rs.getDouble("x"),
                                 rs.getDouble("y")
                         ),
                         rs.getObject("next_event", Integer.class),
-                        rs.getObject("prev_event", Integer.class)
+                        rs.getObject("prev_event", Integer.class),
+                        rs.getString("event_type") != null
+                                ? EventType.valueOf(rs.getString("event_type"))
+                                : null,
+                        rs.getString("time_period") != null
+                                ? TimePeriod.valueOf(rs.getString("time_period"))
+                                : null
                 );
             }
             st.close();
