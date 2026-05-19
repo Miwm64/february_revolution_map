@@ -38,6 +38,14 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+
+    --color-red-brown: oklch(0.4061 0.1159 44.47);
+    --color-red-button: oklch(0.6361 0.1159 42.89 / 63.08%);
+    --color-red-brown-button: oklch(0.4625 0.1261 42.89);
+    --color-creamy2: oklch(0.8346 0.0457 79.25);
+    --color-creamy: oklch(0.9701 0.0141 74.43);
+    --color-creamy-button: oklch(0.942 0.0261 76.79);
+    
 }
 
 .dark {
@@ -114,6 +122,15 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+
+
+    --color-background-creamy: var(--color-creamy);
+    --color-background-creamy-button: var(--color-creamy-button);
+    --color-border-creamy: var(--color-creamy);
+    --color-text-red-brown: var(--color-red-brown);
+    --color-background-red-button: var(--color-red-button);
+    --color-background-red-brown-button: var(--color-red-brown-button);
+
 }
 
 @layer base {
