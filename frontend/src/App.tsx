@@ -1,7 +1,6 @@
 import './output.css';
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 import { motion } from 'framer-motion';
 import HistoricalMap from './HistoricalMap';
 import './App.css';
@@ -96,9 +95,6 @@ function App() {
         const day = String(dateObj.getDate());
         const monthIndex = dateObj.getMonth();
         const year = dateObj.getFullYear();
-        const hours = dateObj.getHours();
-        const minutes = dateObj.getMinutes();
-        const seconds = dateObj.getSeconds();
 
         const periodName = timePeriodDisplayNames[event.timePeriod] || '';
 
@@ -135,14 +131,14 @@ function App() {
     }
   }, [eventsData]);
 
-  const groupedByEventType: Record<string, Event[]> = eventsData.reduce((acc, event) => {
+  /*const groupedByEventType: Record<string, Event[]> = eventsData.reduce((acc, event) => {
     const displayName = eventTypeDisplayNames[event.eventType] || 'Другие';
     if (!acc[displayName]) {
       acc[displayName] = [];
     }
     acc[displayName].push(event);
     return acc;
-  }, {} as Record<string, Event[]>);
+  }, {} as Record<string, Event[]>);*/
 
 
   const availableDays = useMemo(() => {
@@ -248,10 +244,6 @@ function App() {
     setIsMarkerMode(prev => !prev);
   };
 
-  const handleMeasureDistance = () => {
-    alert('Кнопка "Измерить расстояние" нажата!');
-  };
-
   // Переключение между списком и категориями
   const toggleDisplayMode = () => {
     setShowCategories(prev => !prev);
@@ -272,8 +264,8 @@ function App() {
     return { firstRow: fr, secondRow: sr };
   }, [availableDays]);
 
-  const [maxButtonHeight, setMaxButtonHeight] = useState(40);
-  const [minButtonHeight, setMinButtonHeight] = useState(30);
+  const maxButtonHeight = 40;
+  const minButtonHeight = 30;
   const [dayButtonHeight, setDayButtonHeight] = useState(0);
 
   useLayoutEffect(() => {
@@ -382,8 +374,13 @@ function App() {
           </div>
         </div>
       </header>
-
-      {/* Основная часть */}
+      {loading ? (
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-text-red-brown mr-2"></div>
+          <span className="text-text-red-brown font-semibold">Загрузка событий...</span>
+        </div>
+      ) : (
+      //Основная часть
       <div className="flex flex-1 overflow-hidden">
         {/* Левая панель со списком */}
         <aside className="w-64 bg-background-creamy border-r border-gray-700 p-4 flex flex-col shrink-0"
@@ -593,13 +590,6 @@ function App() {
             >
               📍 Поставить метку
             </button>
-            {/* Можно оставить или убрать */
-            /*<button
-              onClick={handleMeasureDistance}
-              className="px-3 py-2 bg-[#5D4037] text-white rounded-lg hover:bg-[#4E342E]"
-            >
-              📏 Измерить расстояние
-            </button>*/}
           </div>
         </aside>
 
@@ -706,6 +696,7 @@ function App() {
 
         </main>
       </div>
+      )}
     </div>
   );
 }

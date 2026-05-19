@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -58,8 +58,8 @@ export default function HistoricalMap({
     const leafletMap = useRef<L.Map | null>(null);
     const tileLayer = useRef<L.TileLayer | null>(null);
     const markersRef = useRef<L.Marker[]>([]);
-    const [clickMarker, setClickMarker] = useState<L.Marker | null>(null);
-    const clickMarkerRef = useRef<L.Marker | null>(null);
+    //const [clickMarker, setClickMarker] = useState<L.Marker | null>(null);
+    //const clickMarkerRef = useRef<L.Marker | null>(null);
     const isMarkerModeRef = useRef<boolean>(false);
     const tempMarkerRef = useRef<L.Marker | null>(null);
     const userMarkerRef = useRef<L.Marker | null>(null);
@@ -243,7 +243,7 @@ export default function HistoricalMap({
                     icon: getIconForEventType(event.eventType)
                 })
                     .addTo(leafletMap.current!)
-                    .bindPopup((instance) => {
+                    .bindPopup(() => {
                         const container = L.DomUtil.create('div', 'popup-container');
 
                         if (displayMode === 'popup') {
