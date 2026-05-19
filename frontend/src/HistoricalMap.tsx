@@ -66,7 +66,7 @@ export default function HistoricalMap({
 
     const createCustomIcon_blue = () => {
         return L.icon({
-            iconUrl: 'marker_blue.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_blue.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -74,7 +74,7 @@ export default function HistoricalMap({
     };
     const createCustomIcon_green = () => {
         return L.icon({
-            iconUrl: 'marker_green.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_green.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -82,7 +82,7 @@ export default function HistoricalMap({
     };
     const createCustomIcon_pink = () => {
         return L.icon({
-            iconUrl: 'marker_pink.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_pink.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -90,7 +90,7 @@ export default function HistoricalMap({
     };
     const createCustomIcon_purple = () => {
         return L.icon({
-            iconUrl: 'marker_purple.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_purple.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -98,7 +98,7 @@ export default function HistoricalMap({
     };
     const createCustomIcon_red = () => {
         return L.icon({
-            iconUrl: 'marker_red.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_red.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -106,7 +106,7 @@ export default function HistoricalMap({
     };
     const createCustomIcon_violet = () => {
         return L.icon({
-            iconUrl: 'marker_violet.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_violet.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -114,7 +114,7 @@ export default function HistoricalMap({
     };
     const createCustomIcon_yellow = () => {
         return L.icon({
-            iconUrl: 'marker_yellow.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_yellow.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -131,10 +131,10 @@ export default function HistoricalMap({
         armed_clash: createCustomIcon_violet,
         government_decree: createCustomIcon_yellow,
         government_formation: createCustomIcon_pink,
-        infrastructure_seizure: createCustomIcon_red,
+        infrastructure_seizure: createCustomIcon_green,
         transport_blockade: createCustomIcon_blue,
         power_negotiation: createCustomIcon_green,
-        power_change: createCustomIcon_purple
+        power_change: createCustomIcon_red
     };
 
     // Возвращаем иконку для конкретного типа или красную по умолчанию
@@ -188,7 +188,7 @@ export default function HistoricalMap({
                 if (tempMarkerRef.current) {
                     tempMarkerRef.current.setLatLng(e.latlng);
                 } else {
-                    const marker = L.marker(e.latlng, { icon: createCustomIconUser() });
+                    const marker = L.marker(e.latlng, { icon: createCustomIcon_yellow() });
                     tempMarkerRef.current = marker;
                 }
             }
@@ -204,7 +204,7 @@ export default function HistoricalMap({
                         userMarkerRef.current = null;
                     }
                     leafletMap.current?.removeLayer(tempMarkerRef.current);
-                    const fixedMarker = L.marker([lat, lng], { icon: createCustomIconUser() })
+                    const fixedMarker = L.marker([lat, lng], { icon: createCustomIcon_yellow() })
                         .addTo(leafletMap.current!)
                         .bindPopup(`X: ${lng.toFixed(3)}, Y: ${lat.toFixed(3)}`)
                         .openPopup();
