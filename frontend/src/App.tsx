@@ -27,30 +27,31 @@ interface Event {
   nextEvent: number | null;
   prevEvent: number | null;
   monthKey?: string;
-  category?: string | null;
+  eventType: string;
+  timePeriod: string;
 }
 
-const categoriesKeywords: Record<string, string[]> = {
-  "Отречение": ["отречение"],
-  "Роспуск": ["роспуск"],
-  "Созыв": ["созыв"],
-  "Принятие решения": ["принятие решения", "решение"],
-  "Учредительное собрание": ["учредительное собрание", "учредительный"],
-  "Правительство": ["правительство", "министерство", "кабинет"]
+const eventTypeDisplayNames: Record<Event['eventType'], string> = {
+  economic_protest: "Экономический протест",
+  political_protest: "Политический протест",
+  agitation_propaganda: "Агитация и пропаганда",
+  military_mutiny: "Военный мятеж",
+  armed_clash: "Вооружённое столкновение",
+  government_decree: "Правительственный указ",
+  government_formation: "Формирование правительства",
+  infrastructure_seizure: "Захват инфраструктуры",
+  transport_blockade: "Транспортная блокада",
+  power_negotiation: "Переговоры о власти",
+  power_change: "Смена власти"
 };
 
-function getCategory(title: string, description: string): string | null {
-  const lowerTitle = title.toLowerCase();
-  const lowerDescription = description.toLowerCase();
-  for (const [category, keywords] of Object.entries(categoriesKeywords)) {
-    for (const keyword of keywords) {
-      if (lowerTitle.includes(keyword) || lowerDescription.includes(keyword)) {
-        return category;
-      }
-    }
-  }
-  return null;
-}
+
+const timePeriodDisplayNames: Record<Event['timePeriod'], string> = {
+  morning: 'Утро',
+  afternoon: 'День',
+  evening: 'Вечер',
+  night: 'Ночь',
+};
 
 function App() {
   const [eventsData, setEventsData] = useState<Event[]>([]);
@@ -99,24 +100,19 @@ function App() {
         const minutes = dateObj.getMinutes();
         const seconds = dateObj.getSeconds();
 
+        const periodName = timePeriodDisplayNames[event.timePeriod] || '';
+
         // Одна строка для формирования displayTimeHMS
-        const displayTimeHMS = `${day} ${displayMonthNames[monthIndex]} ${year}, ${
-          hours > 0
-            ? `${hours}:${minutes > 0 ? `${minutes}:` : '00'}${seconds > 0 ? `${seconds}` : '00'}`
-            : minutes > 0
-                ? `${minutes}:${seconds > 0 ? `${seconds}` : '00'}`
-                : `${seconds > 0 ? `${seconds}` : '00:00:00'}`
-        }`;
+        const displayTimeHMS = `${day} ${displayMonthNames[monthIndex]} ${year} | ${periodName}`;
+
 
         const displayTime = `${day} ${displayMonthNames[monthIndex]} ${year}`;
         const monthKey = categoryMonthNames[monthIndex] + ' ' + year;
-        const category = getCategory(event.title, event.description);
-          return {
+        return {
           ...event,
           displayTime,
           displayTimeHMS,
           monthKey,
-          category,
         };
       });
       setEventsData(processedData);
@@ -133,20 +129,21 @@ function App() {
   }, []);
 
   useEffect(() => {
-  if (eventsData.length > 0) {
-    const allIds = new Set(eventsData.map(e => e.id));
-    setVisibleEventIds(allIds);
-  }
-}, [eventsData]);
-
-  const groupedByCategory: Record<string, Event[]> = eventsData.reduce((acc, event) => {
-    const cat = event.category || 'Другие';
-    if (!acc[cat]) {
-      acc[cat] = [];
+    if (eventsData.length > 0) {
+      const allIds = new Set(eventsData.map(e => e.id));
+      setVisibleEventIds(allIds);
     }
-    acc[cat].push(event);
+  }, [eventsData]);
+
+  const groupedByEventType: Record<string, Event[]> = eventsData.reduce((acc, event) => {
+    const displayName = eventTypeDisplayNames[event.eventType] || 'Другие';
+    if (!acc[displayName]) {
+      acc[displayName] = [];
+    }
+    acc[displayName].push(event);
     return acc;
   }, {} as Record<string, Event[]>);
+
 
   const availableDays = useMemo(() => {
     const daysSet = new Set<string>();
@@ -227,16 +224,17 @@ function App() {
     }
   }, [selectedDays]);
 
-  const filteredGroupedByCategory: Record<string, Event[]> = filteredEvents.reduce((acc, event) => {
-    const cat = event.category || 'Другие';
-    if (!acc[cat]) {
-      acc[cat] = [];
+  const filteredGroupedByEventType: Record<string, Event[]> = filteredEvents.reduce((acc, event) => {
+    const displayName = eventTypeDisplayNames[event.eventType] || 'Другие';
+    if (!acc[displayName]) {
+      acc[displayName] = [];
     }
-    acc[cat].push(event);
+    acc[displayName].push(event);
     return acc;
   }, {} as Record<string, Event[]>);
 
-  const categoriesWithEvents = Object.keys(filteredGroupedByCategory).filter(cat => filteredGroupedByCategory[cat].length > 0);
+
+  const categoriesWithEvents = Object.keys(filteredGroupedByEventType).filter(cat => filteredGroupedByEventType[cat].length > 0);
 
   const sortedCategories = [
     ...categoriesWithEvents.filter(c => c !== 'Другие'),
@@ -442,8 +440,8 @@ function App() {
                     }
                   }}
                   className={`ml-2 px-2 py-1 text-xs rounded ${visibleEventIds.size === eventsData.length
-                      ? 'bg-[#fb6b4b] hover:bg-[#c7492e]' // красная для креста
-                      : 'bg-[#99f78f] hover:bg-[#12952c]' // зеленая для галки 
+                    ? 'bg-[#fb6b4b] hover:bg-[#c7492e]' // красная для креста
+                    : 'bg-[#99f78f] hover:bg-[#12952c]' // зеленая для галки 
                     }`}
                 >
                   {visibleEventIds.size === eventsData.length ? '✕' : '✓'}
@@ -494,7 +492,7 @@ function App() {
                 // Категории
                 sortedCategories.map((category) => {
                   const isOpen = openCategories.has(category);
-                  const eventsInCategory = filteredGroupedByCategory[category] || [];
+                  const eventsInCategory = filteredGroupedByEventType[category] || [];
                   return (
                     <div key={category}>
                       <h3
@@ -614,11 +612,11 @@ function App() {
                 isMarkerMode={isMarkerMode}
                 onMarkerModeChange={setIsMarkerMode}
                 visibleEventIds={visibleEventIds}
-  displayMode={displayMode} 
+                displayMode={displayMode}
                 onEventClick={(event) => {
-    setSelectedEvent(event);
-    setIsDetailPanelOpen(true);
-    setDisplayMode('panel');
+                  setSelectedEvent(event);
+                  setIsDetailPanelOpen(true);
+                  setDisplayMode('panel');
                 }}
               />
 
@@ -650,58 +648,60 @@ function App() {
           </div>
 
           {isDetailPanelOpen && selectedEvent && showMap && (
-  <div className="absolute right-0 top-0 h-full w-64 bg-background-creamy border-l border-gray-300 rounded-lg opacity-85 shadow-lg z-50 p-4 overflow-y-auto" style={{ zIndex: 60, maxHeight: 'calc(100vh - 156px)'}}>
-    <div className="flex justify-between items-center mb-4">
-  <h3 className="text-lg font-semibold text-text-red-brown">
-    {selectedEvent.title}
-  </h3>
-  <div className="flex space-x-2">
-    <button
-      onClick={() => {
-        setIsDetailPanelOpen(false); // Скрываем панель
-        setDisplayMode('popup');   // Переключаем режим обратно
-      }}
-      className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-    >
-      Свернуть
-    </button>
-    <button
-      onClick={() => setIsDetailPanelOpen(false)}
-      className="text-gray-500 hover:text-gray-700"
-    >
-      ✕
-    </button>
-  </div>
-</div>
+            <div className="absolute right-0 top-0 h-full w-64 bg-background-creamy border-l border-gray-300 rounded-lg opacity-85 shadow-lg z-50 p-4 overflow-y-auto" style={{ zIndex: 60, maxHeight: 'calc(100vh - 156px)' }}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-text-red-brown">
+                  {selectedEvent.title}
+                </h3>
+                <div className="flex space-x-2">
+                  {/*<button
+                    onClick={() => {
+                      setIsDetailPanelOpen(false); // Скрываем панель
+                      setDisplayMode('popup');   // Переключаем режим обратно
+                    }}
+                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                  >
+                    Свернуть
+                  </button>*/}
+                  <button
+                    onClick={() => {setIsDetailPanelOpen(false); // Скрываем панель
+                      setDisplayMode('popup');
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
 
-    <div className="space-y-3">
-      <div>
-        <span className="font-semibold text-text-red-brown">Дата:</span>
-        <p>{selectedEvent.displayTimeHMS}</p>
-      </div>
-      <div>
-        <span className="font-semibold text-text-red-brown">Категория:</span>
-        <p>{selectedEvent.category || 'Не указана'}</p>
-      </div>
-      <div>
-        <span className="font-semibold text-text-red-brown">Описание:</span>
-        <p className="whitespace-pre-line">{selectedEvent.description}</p>
-      </div>
-      {selectedEvent.prevEvent && (
-        <div>
-          <span className="font-semibold text-text-red-brown">Предыдущее событие:</span>
-          <p>ID: {selectedEvent.prevEvent}</p>
-        </div>
-      )}
-      {selectedEvent.nextEvent && (
-        <div>
-          <span className="font-semibold text-text-red-brown">Следующее событие:</span>
-          <p>ID: {selectedEvent.nextEvent}</p>
-        </div>
-      )}
-    </div>
-  </div>
-)}
+              <div className="space-y-3">
+                <div>
+                  <span className="font-semibold text-text-red-brown">Дата:</span>
+                  <p>{selectedEvent.displayTimeHMS}</p>
+                </div>
+                <div>
+                  <span className="font-semibold text-text-red-brown">Категория:</span>
+                  <p>{eventTypeDisplayNames[selectedEvent.eventType] || 'Не указана'}</p>
+                </div>
+                <div>
+                  <span className="font-semibold text-text-red-brown">Описание:</span>
+                  <p className="whitespace-pre-line">{selectedEvent.description}</p>
+                </div>
+                {selectedEvent.prevEvent && (
+                  <div>
+                    <span className="font-semibold text-text-red-brown">Предыдущее событие:</span>
+                    <p>ID: {selectedEvent.prevEvent}</p>
+                  </div>
+                )}
+                {selectedEvent.nextEvent && (
+                  <div>
+                    <span className="font-semibold text-text-red-brown">Следующее событие:</span>
+                    <p>ID: {selectedEvent.nextEvent}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
 
         </main>

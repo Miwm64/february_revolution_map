@@ -33,6 +33,8 @@ interface Event {
     coordinates: { x: number; y: number };
     nextEvent: number | null;
     prevEvent: number | null;
+    eventType: string;
+    timePeriod: string;
 }
 
 interface Props {
@@ -62,21 +64,82 @@ export default function HistoricalMap({
     const tempMarkerRef = useRef<L.Marker | null>(null);
     const userMarkerRef = useRef<L.Marker | null>(null);
 
-    const createCustomIcon = () => {
+    const createCustomIcon_blue = () => {
         return L.icon({
-            iconUrl: 'marker.png', // укажите свой путь к изображению
+            iconUrl: 'marker_blue.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
         });
     };
-    const createCustomIconUser = () => {
+    const createCustomIcon_green = () => {
         return L.icon({
-            iconUrl: 'marker2.png', // укажите свой путь к изображению
-            iconSize: [25, 35],
-            iconAnchor: [16, 32],
-            popupAnchor: [0, -32],
+            iconUrl: 'marker_green.png', // укажите свой путь к изображению
+            iconSize: [25, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
         });
+    };
+    const createCustomIcon_pink = () => {
+        return L.icon({
+            iconUrl: 'marker_pink.png', // укажите свой путь к изображению
+            iconSize: [25, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_purple = () => {
+        return L.icon({
+            iconUrl: 'marker_purple.png', // укажите свой путь к изображению
+            iconSize: [25, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_red = () => {
+        return L.icon({
+            iconUrl: 'marker_red.png', // укажите свой путь к изображению
+            iconSize: [25, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_violet = () => {
+        return L.icon({
+            iconUrl: 'marker_violet.png', // укажите свой путь к изображению
+            iconSize: [25, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_yellow = () => {
+        return L.icon({
+            iconUrl: 'marker_yellow.png', // укажите свой путь к изображению
+            iconSize: [25, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+
+
+    const getIconForEventType = (eventType: string): L.Icon => {
+    const iconMap: Record<string, () => L.Icon> = {
+        economic_protest: createCustomIcon_red,
+        political_protest: createCustomIcon_blue,
+        agitation_propaganda: createCustomIcon_green,
+        military_mutiny: createCustomIcon_purple,
+        armed_clash: createCustomIcon_violet,
+        government_decree: createCustomIcon_yellow,
+        government_formation: createCustomIcon_pink,
+        infrastructure_seizure: createCustomIcon_red,
+        transport_blockade: createCustomIcon_blue,
+        power_negotiation: createCustomIcon_green,
+        power_change: createCustomIcon_purple
+    };
+
+    // Возвращаем иконку для конкретного типа или красную по умолчанию
+    const iconCreator = iconMap[eventType] || createCustomIcon_purple;
+    return iconCreator();
     };
 
     // =========================
@@ -177,62 +240,63 @@ export default function HistoricalMap({
                 visibleEventIds.has(event.id)
             ) {
                 const marker = L.marker([event.coordinates.y, event.coordinates.x], {
-                    icon: createCustomIcon()
+                    icon: getIconForEventType(event.eventType)
                 })
                     .addTo(leafletMap.current!)
                     .bindPopup((instance) => {
-  const container = L.DomUtil.create('div', 'popup-container');
+                        const container = L.DomUtil.create('div', 'popup-container');
 
-  // Если режим 'panel', показываем краткое описание и кнопку «Подробнее»
-  if (displayMode === 'popup') {
-    container.innerHTML = `
-      <div style="min-width: 200px;">
-        <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
-          ${event.displayTimeHMS}
-        </div>
-        <div style="font-weight: 600; margin-bottom: 4px;">
-          ${event.title}
-        </div>
-        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-          ${event.description.substring(0, 100)}...
-        </div>
-        <button
-          class="details-button"
-          data-event-id="${event.id}"
-          style="background: #fb6b4b; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;"
-        >
-          Подробнее
-        </button>
-      </div>
-    `;
-  } else {
-    // Если режим 'panel', показываем только заголовок и краткое описание
-    container.innerHTML = `
-      <div style="min-width: 200px;">
-        <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
-          ${event.displayTimeHMS}
-        </div>
-        <div style="font-weight: 600; margin-bottom: 4px;">
-          ${event.title}
-        </div>
-        <div style="font-size: 12px; color: #666;">
-          (Открыта полная панель)
-        </div>
-      </div>
-    `;
-  }
+                        if (displayMode === 'popup') {
+                            // Режим всплывающего окна: краткое описание + кнопка «Подробнее»
+                            container.innerHTML = `
+                            <div style="min-width: 200px;">
+                                <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
+                                ${event.displayTime}
+                                </div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">
+                                ${event.title}
+                                </div>
+                                <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                                ${event.description.substring(0, 100)}...
+                                </div>
+                                <button
+                                class="details-button"
+                                data-event-id="${event.id}"
+                                style="background: #fb6b4b; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;"
+                                >
+                                Подробнее
+                                </button>
+                            </div>
+                            `;
+                        } else {
+                            // Режим панели: только заголовок + подсказка
+                            container.innerHTML = `
+                            <div style="min-width: 200px;">
+                                <div style="font-weight: bold; color: #2563eb; margin-bottom: 4px;">
+                                ${event.displayTime}
+                                </div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">
+                                ${event.title}
+                                </div>
+                                <div style="font-size: 12px; color: #666;">
+                                (Открыта полная панель)
+                                </div>
+                            </div>
+                            `;
+                        }
 
-  const handleClick = (e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains('details-button')) {
-      onEventClick(event);
-    }
-  };
+                        const handleClick = (e: MouseEvent) => {
+                            const target = e.target as HTMLElement;
+                            if (target.classList.contains('details-button')) {
+                            onEventClick(event);
+                            }
+                        };
 
-  container.addEventListener('click', handleClick);
-  (container as any)._handleClick = handleClick;
-  return container;
-});
+                        container.addEventListener('click', handleClick);
+                        (container as any)._handleClick = handleClick;
+                        return container;
+                    });
+
 
 
                 // Сохраняем маркер
@@ -248,7 +312,7 @@ export default function HistoricalMap({
             });
             markersRef.current = [];
         };
-    }, [events, visibleEventIds, onEventClick]);
+    }, [events, visibleEventIds, onEventClick, displayMode]);
 
 
 
