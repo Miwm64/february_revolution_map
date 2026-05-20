@@ -67,7 +67,8 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
   const [displayMode, setDisplayMode] = useState<'popup' | 'panel'>('popup');
-
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  
 
 
   // Тсссс...
@@ -152,6 +153,8 @@ function App() {
   // Обработка поиска и фильтрации
   useEffect(() => {
     let filtered = eventsData;
+
+    // Фильтрация по поиску
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(e =>
@@ -160,14 +163,35 @@ function App() {
         e.time.toLowerCase().includes(q)
       );
     }
+
+    // Фильтрация по выбранному периоду
+    if (selectedPeriod !== 'Все дни') {
+      const dayNum = parseInt(selectedPeriod, 10);
+      if (!isNaN(dayNum)) {
+        filtered = filtered.filter(e =>
+          String(new Date(e.time).getDate()) === String(dayNum)
+        );
+      }
+    }
+
+    // Дополнительная фильтрация по выбранным дням
     if (selectedDays.size > 0 && !selectedDays.has('Все дни')) {
       filtered = filtered.filter(e => {
         const dayNumber = String(new Date(e.time).getDate());
         return selectedDays.has(dayNumber);
       });
     }
+
+    // Сортировка по возрастанию даты (от старых к новым)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.time);
+      const dateB = new Date(b.time);
+      return dateA.getTime() - dateB.getTime();
+    });
+
     setFilteredEvents(filtered);
-  }, [searchQuery, eventsData, selectedDays]);
+  }, [searchQuery, eventsData, selectedDays, selectedPeriod]);
+
 
   useEffect(() => {
     let filtered = eventsData;

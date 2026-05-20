@@ -340,6 +340,9 @@
   .w-64 {
     width: calc(var(--spacing) * 64);
   }
+  .w-640 {
+    width: calc(var(--spacing) * 640);
+  }
   .w-full {
     width: 100%;
   }
@@ -377,6 +380,9 @@
   }
   .cursor-pointer {
     cursor: pointer;
+  }
+  .resize {
+    resize: both;
   }
   .flex-col {
     flex-direction: column;
