@@ -783,7 +783,7 @@ function App() {
 
             {isDetailPanelOpen && selectedEvent && showMap && (
               <div
-                className="absolute right-0 top-0 h-full bg-background-creamy border-l border-gray-300 rounded-lg opacity-85 shadow-lg z-50 p-4 overflow-y-auto"
+                className="absolute right-0 top-0 h-full bg-background-creamy border-l border-gray-300 rounded-lg opacity-90 shadow-lg z-50 p-4 overflow-y-auto"
                 style={{
                   width: `${detailPanelWidth}px`,
                   maxWidth: '800px',
@@ -799,7 +799,7 @@ function App() {
                     onMouseDown={startResizeRight}
                     title="Перетащите, чтобы изменить ширину"
                   />
-                  <h3 className="text-lg font-semibold text-text-red-brown">
+                  <h3 className="text-black text-lg font-semibold">
                     {selectedEvent.title}
                   </h3>
                   <div className="flex space-x-2">
@@ -816,29 +816,29 @@ function App() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-3 ">
                   <div>
-                    <span className="font-semibold text-text-red-brown">Дата:</span>
-                    <p>{selectedEvent.displayTimeHMS}</p>
+                    <span className="font-semibold text-black ">Дата:</span>
+                    <p className="text-black ">{selectedEvent.displayTimeHMS}</p>
                   </div>
                   <div>
-                    <span className="font-semibold text-text-red-brown">Категория:</span>
-                    <p>{eventTypeDisplayNames[selectedEvent.eventType] || 'Не указана'}</p>
+                    <span className="font-semibold text-black ">Категория:</span>
+                    <p className="text-black ">{eventTypeDisplayNames[selectedEvent.eventType] || 'Не указана'}</p>
                   </div>
                   <div>
-                    <span className="font-semibold text-text-red-brown">Описание:</span>
-                    <p className="whitespace-pre-line">{selectedEvent.description}</p>
+                    <span className="font-semibold text-black ">Описание:</span>
+                    <p className="text-black ">{selectedEvent.description}</p>
                   </div>
                   {selectedEvent.prevEvent && (
                     <div>
-                      <span className="font-semibold text-text-red-brown">Предыдущее событие:</span>
-                      <p>ID: {selectedEvent.prevEvent}</p>
+                      <span className="font-semibold text-black ">Предыдущее событие:</span>
+                      <p className="text-black ">ID: {selectedEvent.prevEvent}</p>
                     </div>
                   )}
                   {selectedEvent.nextEvent && (
                     <div>
-                      <span className="font-semibold text-text-red-brown">Следующее событие:</span>
-                      <p>ID: {selectedEvent.nextEvent}</p>
+                      <span className="font-semibold text-black ">Следующее событие:</span>
+                      <p className="text-black ">ID: {selectedEvent.nextEvent}</p>
                     </div>
                   )}
                 </div>

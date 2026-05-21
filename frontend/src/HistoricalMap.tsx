@@ -288,7 +288,7 @@ export default function HistoricalMap({
                         const handleClick = (e: MouseEvent) => {
                             const target = e.target as HTMLElement;
                             if (target.classList.contains('details-button')) {
-                            onEventClick(event);
+                                onEventClick(event);
                             }
                         };
 
@@ -347,16 +347,16 @@ export default function HistoricalMap({
                     Центрировать
                 </button>
                 <button
-                    onClick={handleZoomIn}
-                    className="px-4 py-2 bg-background-creamy-button text-text-red-brown hover:bg-background-red-button rounded-lg font-bold transition"
-                >
-                    +
-                </button>
-                <button
                     onClick={handleZoomOut}
                     className="px-4 py-2 bg-background-creamy-button text-text-red-brown hover:bg-background-red-button rounded-lg font-bold transition"
                 >
                     -
+                </button>
+                <button
+                    onClick={handleZoomIn}
+                    className="px-4 py-2 bg-background-creamy-button text-text-red-brown hover:bg-background-red-button rounded-lg font-bold transition"
+                >
+                    +
                 </button>
             </div>
         </>
