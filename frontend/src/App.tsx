@@ -68,7 +68,12 @@ function App() {
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
   const [displayMode, setDisplayMode] = useState<'popup' | 'panel'>('popup');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  
+  const [sidebarWidth, setSidebarWidth] = useState(250);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const isResizing = useRef(false);
+  const [detailPanelWidth, setDetailPanelWidth] = useState(250);
+
+
 
 
   // Тсссс...
@@ -302,6 +307,101 @@ function App() {
     }
   }, [availableDays, maxButtonHeight, minButtonHeight]);
 
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResize);
+  };
+
+  const stopResize = () => {
+    isResizing.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', stopResize);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isResizing.current) return;
+
+    const newWidth = e.clientX;
+    if (newWidth >= 200 && newWidth <= 400) {
+      setSidebarWidth(newWidth);
+    }
+  };
+
+
+  //сохраняем при обновлении
+  const prevSidebarWidth = useRef(sidebarWidth);
+
+  useEffect(() => {
+    // Сохраняем только если ширина изменилась
+    if (prevSidebarWidth.current !== sidebarWidth) {
+      localStorage.setItem('sidebarWidth', sidebarWidth.toString());
+      prevSidebarWidth.current = sidebarWidth;
+    }
+  }, [sidebarWidth]);
+
+  // При инициализации компонента
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('sidebarWidth');
+    if (savedWidth) {
+      const width = parseInt(savedWidth, 10);
+      if (width >= 200 && width <= 400) {
+        setSidebarWidth(width);
+      }
+    }
+  }, []);
+
+  const prevDetailPanelWidth = useRef(detailPanelWidth);
+  const isResizingRight = useRef(false);
+
+  const startResizeRight = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingRight.current = true;
+    document.addEventListener('mousemove', handleMouseMoveRight);
+    document.addEventListener('mouseup', stopResizeRight);
+  };
+
+  const stopResizeRight = () => {
+    isResizingRight.current = false;
+    document.removeEventListener('mousemove', handleMouseMoveRight);
+    document.removeEventListener('mouseup', stopResizeRight);
+  };
+
+  const handleMouseMoveRight = (e: MouseEvent) => {
+    if (!isResizingRight.current) return;
+
+    // Ширина правой панели определяется от правого края экрана
+    const newWidth = window.innerWidth - e.clientX;
+    if (newWidth >= 200 && newWidth <= 800) {
+      setDetailPanelWidth(newWidth);
+    }
+  };
+
+  useEffect(() => {
+    // Сохраняем только если ширина изменилась
+    if (prevDetailPanelWidth.current !== detailPanelWidth) {
+      localStorage.setItem('detailPanelWidth', detailPanelWidth.toString());
+      prevDetailPanelWidth.current = detailPanelWidth;
+    }
+  }, [detailPanelWidth]);
+
+  // При инициализации компонента
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('detailPanelWidth');
+    if (savedWidth) {
+      const width = parseInt(savedWidth, 10);
+      if (width >= 200 && width <= 800) {
+        setDetailPanelWidth(width);
+      }
+    }
+  }, []);
+
+
+
+
+
+
   return (
     <div className="min-h-screen bg-background-creamy text-text-red-brown flex flex-col">
       {/* Заголовок */}
@@ -404,80 +504,184 @@ function App() {
           <span className="text-text-red-brown font-semibold">Загрузка событий...</span>
         </div>
       ) : (
-      //Основная часть
-      <div className="flex flex-1 overflow-hidden">
-        {/* Левая панель со списком */}
-        <aside className="w-64 bg-background-creamy border-r border-gray-700 p-4 flex flex-col shrink-0"
-          style={{
-            backgroundImage: "url(/foncity.png)",
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'bottom left',
-            backgroundSize: 'contain',
-            maxHeight: 'calc(100vh - 108px)',
-          }}
-        >
-          {/* Заголовок */}
-          <h2 className="text-lg font-semibold mb-4 text-text-red-brown"> События революции </h2>
-          <div className="mb-2 sticky top-0 bg-background-creamy z-10">
-            {/* Поиск */}
-            <input
-              type="text"
-              placeholder="Поиск..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 bg-background-creamy-button border border-gray-600 rounded-lg mb-4 text-text-red-brown focus:outline-none focus:border-blue-500"
-            />
-            {/* Крестик для очистки */}
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-9/24 transform -translate-y-1/2 text-lg text-[#fb6b4b] hover:text-[#c7492e] focus:outline-none flex items-center justify-center w-6 h-6"
-                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                aria-label="Очистить"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-
-          {/* Переключение отображения */}
-          {
-            !isSearching && (
-              <div className="flex items-center mb-2">
+        //Основная часть
+        <div className="flex flex-1 overflow-hidden">
+          {/* Левая панель со списком */}
+          <aside
+            ref={sidebarRef}
+            className="bg-background-creamy border-r border-gray-700 p-4 flex flex-col shrink-0 relative"
+            style={{
+              width: `${sidebarWidth}px`,
+              maxWidth: '400px',
+              minWidth: '200px',
+              backgroundImage: "url(/foncity.png)",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'bottom left',
+              backgroundSize: 'contain',
+              maxHeight: 'calc(100vh - 108px)',
+            }}
+          >
+            {/* Заголовок */}
+            <h2 className="text-lg font-semibold mb-4 text-text-red-brown"> События революции </h2>
+            <div className="mb-2 sticky top-0 bg-background-creamy z-10">
+              {/* Поиск */}
+              <input
+                type="text"
+                placeholder="Поиск..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 bg-background-creamy-button border border-gray-600 rounded-lg mb-4 text-text-red-brown focus:outline-none focus:border-blue-500"
+              />
+              {/* Крестик для очистки */}
+              {searchQuery && (
                 <button
-                  onClick={toggleDisplayMode}
-                  className="flex-1 px-2 py-2 rounded-lg bg-[#5D4037] text-white hover:bg-[#4E342E]"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-9/24 transform -translate-y-1/2 text-lg text-[#fb6b4b] hover:text-[#c7492e] focus:outline-none flex items-center justify-center w-6 h-6"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  aria-label="Очистить"
                 >
-                  {showCategories ? 'Сортировать по дате' : 'Сортировать по категориям'}
+                  ✕
                 </button>
-                {/* Маленькая кнопка "Показать все/скрыть все метки" */}
-                <button
-                  onClick={() => {
-                    if (visibleEventIds.size === eventsData.length) {
-                      setVisibleEventIds(new Set()); // скрыть все
-                    } else {
-                      setVisibleEventIds(new Set(eventsData.map(e => e.id))); // показать все
-                    }
-                  }}
-                  className={`ml-2 px-2 py-1 text-xs rounded ${visibleEventIds.size === eventsData.length
-                    ? 'bg-[#fb6b4b] hover:bg-[#c7492e]' // красная для креста
-                    : 'bg-[#99f78f] hover:bg-[#12952c]' // зеленая для галки 
-                    }`}
-                >
-                  {visibleEventIds.size === eventsData.length ? '✕' : '✓'}
-                </button>
-              </div>
-            )
-          }
+              )}
+            </div>
 
-          {/* Список по категориям или поиск */}
-          <div className="flex-1 overflow-y-auto pr-3">
+
+            {/* Переключение отображения */}
             {
-              isSearching ? (
-                // Результаты поиска
-                <div>
-                  {filteredEvents.map((event) => (
+              !isSearching && (
+                <div className="flex items-center mb-2 ">
+                  <button
+                    onClick={toggleDisplayMode}
+                    className="flex-1 px-2 py-2 rounded-lg bg-[#5D4037] text-white hover:bg-[#4E342E]"
+                    title="Включить сортировку по дате или по категориям"
+                  >
+                    {showCategories ? 'Сортировать по дате' : 'Сортировать по категориям'}
+                  </button>
+                  {/* Маленькая кнопка "Показать все/скрыть все метки" */}
+                  <button
+                    onClick={() => {
+                      if (visibleEventIds.size === eventsData.length) {
+                        setVisibleEventIds(new Set()); // скрыть все
+                      } else {
+                        setVisibleEventIds(new Set(eventsData.map(e => e.id))); // показать все
+                      }
+                    }}
+                    className={`ml-2 px-2 py-1 text-xs rounded ${visibleEventIds.size === eventsData.length
+                      ? 'bg-[#fb6b4b] hover:bg-[#c7492e]' // красная для креста
+                      : 'bg-[#99f78f] hover:bg-[#12952c]' // зеленая для галки 
+                      }`}
+                    title={`${visibleEventIds.size === eventsData.length
+                      ? 'Снять выделение' // красная для креста
+                      : 'Выделить всё' // зеленая для галки 
+                      }`}
+                  >
+                    {visibleEventIds.size === eventsData.length ? '✕' : '✓'}
+                  </button>
+                </div>
+              )
+            }
+
+            {/* Список по категориям или поиск */}
+            <div className="flex-1 overflow-y-auto pr-3">
+              {
+                isSearching ? (
+                  // Результаты поиска
+                  <div>
+                    {filteredEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
+                            <div className="font-medium">{event.title}</div>
+                          </div>
+                          {/* Чекбокс */}
+                          <input
+                            type="checkbox"
+                            checked={visibleEventIds.has(event.id)}
+                            onChange={() => {
+                              setVisibleEventIds(prev => {
+                                const newSet = new Set(prev);
+                                if (newSet.has(event.id)) {
+                                  newSet.delete(event.id);
+                                } else {
+                                  newSet.add(event.id);
+                                }
+                                return newSet;
+                              });
+                            }}
+                            title="Показать/скрыть на карте"
+                            className="ml-2"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : showCategories ? (
+                  // Категории
+                  sortedCategories.map((category) => {
+                    const isOpen = openCategories.has(category);
+                    const eventsInCategory = filteredGroupedByEventType[category] || [];
+                    return (
+                      <div key={category}>
+                        <h3
+                          className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-center"
+                          onClick={() => {
+                            const newSet = new Set(openCategories);
+                            if (newSet.has(category)) {
+                              newSet.delete(category);
+                            } else {
+                              newSet.add(category);
+                            }
+                            setOpenCategories(newSet);
+                          }}
+                        >
+                          <span className="mr-2">{isOpen ? '▼' : '▶'}</span> {category}
+                        </h3>
+                        {isOpen && eventsInCategory.length > 0 &&
+                          eventsInCategory.map((event) => (
+                            <div
+                              key={event.id}
+                              className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
+                                  <div className="font-medium">{event.title}</div>
+                                </div>
+                                {/* Чекбокс */}
+                                <input
+                                  type="checkbox"
+                                  checked={visibleEventIds.has(event.id)}
+                                  onChange={() => {
+                                    setVisibleEventIds(prev => {
+                                      const newSet = new Set(prev);
+                                      if (newSet.has(event.id)) {
+                                        newSet.delete(event.id);
+                                      } else {
+                                        newSet.add(event.id);
+                                      }
+                                      return newSet;
+                                    });
+                                  }}
+                                  title="Показать/скрыть на карте"
+                                  className="ml-2"
+                                />
+                              </div>
+                            </div>
+                          ))
+                        }
+                        {isOpen && eventsInCategory.length === 0 && (
+                          <div className="ml-4 text-text-red-brown">Нет событий</div>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  // Весь список без группировки
+                  filteredEvents.map((event) => (
                     <div
                       key={event.id}
                       className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
@@ -507,219 +711,143 @@ function App() {
                         />
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : showCategories ? (
-                // Категории
-                sortedCategories.map((category) => {
-                  const isOpen = openCategories.has(category);
-                  const eventsInCategory = filteredGroupedByEventType[category] || [];
-                  return (
-                    <div key={category}>
-                      <h3
-                        className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-center"
-                        onClick={() => {
-                          const newSet = new Set(openCategories);
-                          if (newSet.has(category)) {
-                            newSet.delete(category);
-                          } else {
-                            newSet.add(category);
-                          }
-                          setOpenCategories(newSet);
-                        }}
-                      >
-                        <span className="mr-2">{isOpen ? '▼' : '▶'}</span> {category}
-                      </h3>
-                      {isOpen && eventsInCategory.length > 0 &&
-                        eventsInCategory.map((event) => (
-                          <div
-                            key={event.id}
-                            className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
-                                <div className="font-medium">{event.title}</div>
-                              </div>
-                              {/* Чекбокс */}
-                              <input
-                                type="checkbox"
-                                checked={visibleEventIds.has(event.id)}
-                                onChange={() => {
-                                  setVisibleEventIds(prev => {
-                                    const newSet = new Set(prev);
-                                    if (newSet.has(event.id)) {
-                                      newSet.delete(event.id);
-                                    } else {
-                                      newSet.add(event.id);
-                                    }
-                                    return newSet;
-                                  });
-                                }}
-                                title="Показать/скрыть на карте"
-                                className="ml-2"
-                              />
-                            </div>
-                          </div>
-                        ))
-                      }
-                      {isOpen && eventsInCategory.length === 0 && (
-                        <div className="ml-4 text-text-red-brown">Нет событий</div>
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                // Весь список без группировки
-                filteredEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className="w-full text-left p-3 bg-background-creamy-button rounded-lg border-1 border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
-                        <div className="font-medium">{event.title}</div>
-                      </div>
-                      {/* Чекбокс */}
-                      <input
-                        type="checkbox"
-                        checked={visibleEventIds.has(event.id)}
-                        onChange={() => {
-                          setVisibleEventIds(prev => {
-                            const newSet = new Set(prev);
-                            if (newSet.has(event.id)) {
-                              newSet.delete(event.id);
-                            } else {
-                              newSet.add(event.id);
-                            }
-                            return newSet;
-                          });
-                        }}
-                        title="Показать/скрыть на карте"
-                        className="ml-2"
-                      />
-                    </div>
-                  </div>
-                ))
-              )
-            }
-          </div>
-
-          {/* Меню снизу */}
-          <div className="mt-auto pt-4 flex flex-col space-y-2">
-            <button
-              onClick={handleSetMarker}
-              className={`px-3 py-2 rounded-lg transition-all ${isMarkerMode ? 'bg-orange-500 text-white' : 'bg-[#8B4513] text-white hover:bg-[#70360F]'}`}
-            >
-              📍 Поставить метку
-            </button>
-          </div>
-        </aside>
-
-        {/* Карта */}
-        <main className="flex-1 bg-background-creamy relative flex flex-col">
-          {showMap ? (
-            <div className="flex-1 overflow-hidden relative" style={{ zIndex: 0 }}>
-              <HistoricalMap
-                events={eventsForMap}
-                isMarkerMode={isMarkerMode}
-                onMarkerModeChange={setIsMarkerMode}
-                visibleEventIds={visibleEventIds}
-                displayMode={displayMode}
-                onEventClick={(event) => {
-                  setSelectedEvent(event);
-                  setIsDetailPanelOpen(true);
-                  setDisplayMode('panel');
-                }}
-              />
-
+                  ))
+                )
+              }
             </div>
-          ) : (
 
-            <div className="flex-1 flex items-center justify-center relative overflow-hidden" style={{ maxWidth: '100vw', maxHeight: 'calc(100vh - 156px)' }}>
-              <motion.div
-                className="w-full h-full flex items-center justify-center box-border"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
+            {/* Меню снизу */}
+            <div className="mt-auto pt-4 flex flex-col space-y-2">
+              <button
+                onClick={handleSetMarker}
+                className={`px-3 py-2 rounded-lg transition-all ${isMarkerMode ? 'bg-orange-500 text-white' : 'bg-[#8B4513] text-white hover:bg-[#70360F]'}`}
               >
-                <img
-                  src="Azourus.jpg"
-                  alt="Спонсор"
-                  className="max-w-full max-h-full object-contain"
-                />
-              </motion.div>
+                📍 Поставить метку
+              </button>
             </div>
-          )}
-          <hr className="border-black" />
-          {/* Место для авторов */}
-          <div
-            className="p-2 font-bold text-text-red-brown tracking-wide leading-tight text-center"
-            style={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem' }}
+            {/* Разделитель для изменения размера */}
+            <div
+              className="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-gray-300 hover:bg-gray-500 transition-colors z-10"
+              onMouseDown={startResize}
+              title="Перетащите, чтобы изменить ширину"
+            />
+          </aside>
+
+          {/* Карта */}
+          <main
+            className="flex-1 bg-background-creamy relative flex flex-col"
+            style={{ flex: `1 1 ${`calc(100vw - ${sidebarWidth}px)`}` }}
           >
-            Developed by bez.bab: Miwm64 | kessi.kissa | 69n1Ner_ | i11uha
-          </div>
 
-          {isDetailPanelOpen && selectedEvent && showMap && (
-            <div className="absolute right-0 top-0 h-full w-64 bg-background-creamy border-l border-gray-300 rounded-lg opacity-85 shadow-lg z-50 p-4 overflow-y-auto" style={{ zIndex: 60, maxHeight: 'calc(100vh - 156px)' }}>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-text-red-brown">
-                  {selectedEvent.title}
-                </h3>
-                <div className="flex space-x-2">
-                  {/*<button
-                    onClick={() => {
-                      setIsDetailPanelOpen(false); // Скрываем панель
-                      setDisplayMode('popup');   // Переключаем режим обратно
-                    }}
-                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                  >
-                    Свернуть
-                  </button>*/}
-                  <button
-                    onClick={() => {setIsDetailPanelOpen(false); // Скрываем панель
-                      setDisplayMode('popup');
-                    }}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
+            {showMap ? (
+              <div className="flex-1 overflow-hidden relative" style={{ zIndex: 0 }}>
+                <HistoricalMap
+                  events={eventsForMap}
+                  isMarkerMode={isMarkerMode}
+                  onMarkerModeChange={setIsMarkerMode}
+                  visibleEventIds={visibleEventIds}
+                  displayMode={displayMode}
+                  onEventClick={(event) => {
+                    setSelectedEvent(event);
+                    setIsDetailPanelOpen(true);
+                    setDisplayMode('panel');
+                  }}
+                />
 
-              <div className="space-y-3">
-                <div>
-                  <span className="font-semibold text-text-red-brown">Дата:</span>
-                  <p>{selectedEvent.displayTimeHMS}</p>
-                </div>
-                <div>
-                  <span className="font-semibold text-text-red-brown">Категория:</span>
-                  <p>{eventTypeDisplayNames[selectedEvent.eventType] || 'Не указана'}</p>
-                </div>
-                <div>
-                  <span className="font-semibold text-text-red-brown">Описание:</span>
-                  <p className="whitespace-pre-line">{selectedEvent.description}</p>
-                </div>
-                {selectedEvent.prevEvent && (
-                  <div>
-                    <span className="font-semibold text-text-red-brown">Предыдущее событие:</span>
-                    <p>ID: {selectedEvent.prevEvent}</p>
-                  </div>
-                )}
-                {selectedEvent.nextEvent && (
-                  <div>
-                    <span className="font-semibold text-text-red-brown">Следующее событие:</span>
-                    <p>ID: {selectedEvent.nextEvent}</p>
-                  </div>
-                )}
               </div>
+            ) : (
+
+              <div className="flex-1 flex items-center justify-center relative overflow-hidden" style={{ maxWidth: '100vw', maxHeight: 'calc(100vh - 156px)' }}>
+                <motion.div
+                  className="w-full h-full flex items-center justify-center box-border"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                >
+                  <img
+                    src="Azourus.jpg"
+                    alt="Спонсор"
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </motion.div>
+              </div>
+            )}
+            <hr className="border-black" />
+            {/* Место для авторов */}
+            <div
+              className="p-2 font-bold text-text-red-brown tracking-wide leading-tight text-center"
+              style={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem' }}
+            >
+              Developed by bez.bab: Miwm64 | kessi.kissa | 69n1Ner_ | i11uha
             </div>
-          )}
+
+            {isDetailPanelOpen && selectedEvent && showMap && (
+              <div
+                className="absolute right-0 top-0 h-full bg-background-creamy border-l border-gray-300 rounded-lg opacity-85 shadow-lg z-50 p-4 overflow-y-auto"
+                style={{
+                  width: `${detailPanelWidth}px`,
+                  maxWidth: '800px',
+                  minWidth: '200px',
+                  zIndex: 60,
+                  maxHeight: 'calc(100vh - 156px)'
+                }}
+              >
+                <div>
+                  {/* Разделитель для изменения размера */}
+                  <div
+                    className="absolute top-0 left-0 w-1 h-full cursor-col-resize bg-gray-300 hover:bg-gray-500 transition-colors z-20"
+                    onMouseDown={startResizeRight}
+                    title="Перетащите, чтобы изменить ширину"
+                  />
+                  <h3 className="text-lg font-semibold text-text-red-brown">
+                    {selectedEvent.title}
+                  </h3>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        setIsDetailPanelOpen(false);
+                        setDisplayMode('popup');
+                      }}
+                      className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#fb6b4b] focus:rounded-sm z-30"
+                      aria-label="Закрыть панель деталей"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <span className="font-semibold text-text-red-brown">Дата:</span>
+                    <p>{selectedEvent.displayTimeHMS}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-text-red-brown">Категория:</span>
+                    <p>{eventTypeDisplayNames[selectedEvent.eventType] || 'Не указана'}</p>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-text-red-brown">Описание:</span>
+                    <p className="whitespace-pre-line">{selectedEvent.description}</p>
+                  </div>
+                  {selectedEvent.prevEvent && (
+                    <div>
+                      <span className="font-semibold text-text-red-brown">Предыдущее событие:</span>
+                      <p>ID: {selectedEvent.prevEvent}</p>
+                    </div>
+                  )}
+                  {selectedEvent.nextEvent && (
+                    <div>
+                      <span className="font-semibold text-text-red-brown">Следующее событие:</span>
+                      <p>ID: {selectedEvent.nextEvent}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
 
-        </main>
-      </div>
+          </main>
+        </div>
       )}
     </div>
   );

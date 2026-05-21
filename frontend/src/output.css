@@ -192,6 +192,9 @@
   .pointer-events-none {
     pointer-events: none;
   }
+  .visible {
+    visibility: visible;
+  }
   .absolute {
     position: absolute;
   }
@@ -210,6 +213,9 @@
   .top-0 {
     top: calc(var(--spacing) * 0);
   }
+  .top-4 {
+    top: calc(var(--spacing) * 4);
+  }
   .top-9\/24 {
     top: calc(9 / 24 * 100%);
   }
@@ -219,17 +225,29 @@
   .right-3 {
     right: calc(var(--spacing) * 3);
   }
+  .right-4 {
+    right: calc(var(--spacing) * 4);
+  }
   .bottom-6 {
     bottom: calc(var(--spacing) * 6);
   }
   .bottom-full {
     bottom: 100%;
   }
+  .left-0 {
+    left: calc(var(--spacing) * 0);
+  }
   .left-1\/2 {
     left: calc(1 / 2 * 100%);
   }
   .z-10 {
     z-index: 10;
+  }
+  .z-20 {
+    z-index: 20;
+  }
+  .z-30 {
+    z-index: 30;
   }
   .z-50 {
     z-index: 50;
@@ -260,6 +278,9 @@
   }
   .mt-4 {
     margin-top: calc(var(--spacing) * 4);
+  }
+  .mt-6 {
+    margin-top: calc(var(--spacing) * 6);
   }
   .mt-auto {
     margin-top: auto;
@@ -328,6 +349,12 @@
   .min-h-screen {
     min-height: 100vh;
   }
+  .w-1 {
+    width: calc(var(--spacing) * 1);
+  }
+  .w-2 {
+    width: calc(var(--spacing) * 2);
+  }
   .w-6 {
     width: calc(var(--spacing) * 6);
   }
@@ -377,6 +404,9 @@
   }
   .animate-spin {
     animation: var(--animate-spin);
+  }
+  .cursor-col-resize {
+    cursor: col-resize;
   }
   .cursor-pointer {
     cursor: pointer;
@@ -561,6 +591,9 @@
   .bg-gray-100 {
     background-color: var(--color-gray-100);
   }
+  .bg-gray-300 {
+    background-color: var(--color-gray-300);
+  }
   .bg-orange-500 {
     background-color: var(--color-orange-500);
   }
@@ -611,6 +644,9 @@
   }
   .pr-3 {
     padding-right: calc(var(--spacing) * 3);
+  }
+  .pr-6 {
+    padding-right: calc(var(--spacing) * 6);
   }
   .text-center {
     text-align: center;
@@ -815,6 +851,13 @@
       }
     }
   }
+  .hover\:bg-gray-500 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-gray-500);
+      }
+    }
+  }
   .hover\:bg-muted {
     &:hover {
       @media (hover: hover) {
@@ -870,9 +913,25 @@
       }
     }
   }
+  .focus\:rounded-sm {
+    &:focus {
+      border-radius: calc(var(--radius) * 0.6);
+    }
+  }
   .focus\:border-blue-500 {
     &:focus {
       border-color: var(--color-blue-500);
+    }
+  }
+  .focus\:ring-2 {
+    &:focus {
+      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
+      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+    }
+  }
+  .focus\:ring-\[\#fb6b4b\] {
+    &:focus {
+      --tw-ring-color: #fb6b4b;
     }
   }
   .focus\:outline-none {
