@@ -64,25 +64,90 @@ export default function HistoricalMap({
     const tempMarkerRef = useRef<L.Marker | null>(null);
     const userMarkerRef = useRef<L.Marker | null>(null);
 
-    const createCustomIcon_blue = () => {
+    const createCustomIcon_dollar = () => {
         return L.icon({
-            iconUrl: 'marker/marker_blue.png', // укажите свой путь к изображению
+            
+            iconUrl: 'icon_marker/dollar-no-bg.png', // укажите свой путь к изображению
+            iconSize: [40, 40], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_copybook = () => {
+        return L.icon({
+            iconUrl: 'icon_marker/copybook-no-bg.png', // укажите свой путь к изображению
+            iconSize: [35, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_crown = () => {
+        return L.icon({
+            iconUrl: 'icon_marker/crown-no-bg.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
         });
     };
-    const createCustomIcon_green = () => {
+    const createCustomIcon_fence = () => {
         return L.icon({
-            iconUrl: 'marker/marker_green.png', // укажите свой путь к изображению
+            iconUrl: 'icon_marker/fence-no-bg.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
         });
     };
-    const createCustomIcon_pink = () => {
+    const createCustomIcon_fire = () => {
         return L.icon({
-            iconUrl: 'marker/marker_pink.png', // укажите свой путь к изображению
+            iconUrl: 'icon_marker/fire-no-bg.png', // укажите свой путь к изображению
+            iconSize: [27, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_fist = () => {
+        return L.icon({
+            iconUrl: 'icon_marker/fist-no-bg.png', // укажите свой путь к изображению
+            iconSize: [30, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_flag = () => {
+        return L.icon({
+            iconUrl: 'icon_marker/flag-no-bg.png', // укажите свой путь к изображению
+            iconSize: [40, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_government = () => {
+        return L.icon({
+            iconUrl: 'icon_marker/government-no-bg.png', // укажите свой путь к изображению
+            iconSize: [35, 45], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_handshake = () => {
+        return L.icon({
+            iconUrl: 'icon_marker/handshake-no-bg.png', // укажите свой путь к изображению
+            iconSize: [40, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_shield = () => {
+        return L.icon({
+            iconUrl: 'icon_marker/shield-no-bg.png', // укажите свой путь к изображению
+            iconSize: [35, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_speaker = () => {
+        return L.icon({
+            iconUrl: 'icon_marker/speaker-no-bg.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -91,22 +156,6 @@ export default function HistoricalMap({
     const createCustomIcon_purple = () => {
         return L.icon({
             iconUrl: 'marker/marker_purple.png', // укажите свой путь к изображению
-            iconSize: [25, 35], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_red = () => {
-        return L.icon({
-            iconUrl: 'marker/marker_red.png', // укажите свой путь к изображению
-            iconSize: [25, 35], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_violet = () => {
-        return L.icon({
-            iconUrl: 'marker/marker_violet.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -123,24 +172,30 @@ export default function HistoricalMap({
 
 
     const getIconForEventType = (eventType: string): L.Icon => {
-    const iconMap: Record<string, () => L.Icon> = {
-        economic_protest: createCustomIcon_red,
-        political_protest: createCustomIcon_blue,
-        agitation_propaganda: createCustomIcon_green,
-        military_mutiny: createCustomIcon_purple,
-        armed_clash: createCustomIcon_violet,
-        government_decree: createCustomIcon_yellow,
-        government_formation: createCustomIcon_pink,
-        infrastructure_seizure: createCustomIcon_green,
-        transport_blockade: createCustomIcon_blue,
-        power_negotiation: createCustomIcon_green,
-        power_change: createCustomIcon_red
-    };
+        const iconMap: Record<string, () => L.Icon> = {
+            economic_protest: createCustomIcon_dollar,
+            political_protest: createCustomIcon_fist,
+            agitation_propaganda: createCustomIcon_speaker,
+            military_mutiny: createCustomIcon_fire,
+            armed_clash: createCustomIcon_shield,
+            government_decree: createCustomIcon_copybook,
+            government_formation: createCustomIcon_government,
+            infrastructure_seizure: createCustomIcon_flag,
+            transport_blockade: createCustomIcon_fence,
+            power_negotiation: createCustomIcon_handshake,
+            power_change: createCustomIcon_crown
+        };
 
-    // Возвращаем иконку для конкретного типа или красную по умолчанию
-    const iconCreator = iconMap[eventType] || createCustomIcon_purple;
-    return iconCreator();
+        // Возвращаем иконку для конкретного типа или красную по умолчанию
+        const iconCreator = iconMap[eventType] || createCustomIcon_purple;
+        return iconCreator();
     };
+    const displayModeRef = useRef<string>(displayMode);
+
+    // === Отдельный useEffect для синхронизации ===
+    useEffect(() => {
+        displayModeRef.current = displayMode;
+    }, [displayMode]);
 
     // =========================
     // INIT MAP
@@ -225,6 +280,7 @@ export default function HistoricalMap({
     // =========================
     // Маркеры, только для тех событий, что в visibleEventIds
     // =========================
+
     useEffect(() => {
         if (!leafletMap.current) return;
 
@@ -295,8 +351,17 @@ export default function HistoricalMap({
                         container.addEventListener('click', handleClick);
                         (container as any)._handleClick = handleClick;
                         return container;
-                    });
+                    })
 
+                    .on('click', (e: L.LeafletMouseEvent) => {
+                        if (displayModeRef.current === 'panel') {
+                            // Панель уже открыта: обновляем событие и блокируем попап
+                            e.originalEvent?.stopPropagation?.();
+                            onEventClick(event);
+                            setTimeout(() => marker.closePopup(), 0);
+                        }
+                        // В режиме 'popup' ничего не делаем — Leaflet сам откроет попап
+                    })
 
 
                 // Сохраняем маркер
