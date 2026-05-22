@@ -397,9 +397,53 @@ function App() {
     }
   }, []);
 
+  // === Хелперы для работы с видимостью по категориям ===
 
+  // Все ли события в категории видимы?
+  const areAllEventsInCategoryVisible = (category: string): boolean => {
+    const eventsInCategory = filteredGroupedByEventType[category] || [];
+    if (eventsInCategory.length === 0) return false;
+    return eventsInCategory.every(e => visibleEventIds.has(e.id));
+  };
 
+  // Есть ли хотя бы одно видимое событие в категории? (для indeterminate)
+  const areSomeEventsInCategoryVisible = (category: string): boolean => {
+    const eventsInCategory = filteredGroupedByEventType[category] || [];
+    if (eventsInCategory.length === 0) return false;
+    return eventsInCategory.some(e => visibleEventIds.has(e.id));
+  };
 
+  // Переключить видимость всех событий в категории
+  const toggleCategoryVisibility = (category: string) => {
+    const eventsInCategory = filteredGroupedByEventType[category] || [];
+    if (eventsInCategory.length === 0) return;
+    
+    const allVisible = areAllEventsInCategoryVisible(category);
+    
+    setVisibleEventIds(prev => {
+      const newSet = new Set(prev);
+      if (allVisible) {
+        // Скрыть все события категории
+        eventsInCategory.forEach(e => newSet.delete(e.id));
+      } else {
+        // Показать все события категории
+        eventsInCategory.forEach(e => newSet.add(e.id));
+      }
+      return newSet;
+    });
+  };
+
+  // Возвращает: 'all' | 'none' | 'some'
+  const getCategoryVisibilityState = (category: string): 'all' | 'none' | 'some' => {
+    const eventsInCategory = filteredGroupedByEventType[category] || [];
+    if (eventsInCategory.length === 0) return 'none';
+    
+    const visibleCount = eventsInCategory.filter(e => visibleEventIds.has(e.id)).length;
+    
+    if (visibleCount === eventsInCategory.length) return 'all';
+    if (visibleCount === 0) return 'none';
+    return 'some';
+  };
 
 
   return (
@@ -567,7 +611,7 @@ function App() {
                       }
                     }}
                     className={`ml-2 px-2 py-1 text-xs rounded ${visibleEventIds.size === eventsData.length
-                      ? 'bg-[#fb6b4b] hover:bg-[#c7492e]' // красная для креста
+                      ? 'bg-[#fb6b4b] text-white hover:bg-[#c7492e]' // красная для креста
                       : 'bg-[#99f78f] hover:bg-[#12952c]' // зеленая для галки 
                       }`}
                     title={`${visibleEventIds.size === eventsData.length
@@ -626,20 +670,56 @@ function App() {
                     const eventsInCategory = filteredGroupedByEventType[category] || [];
                     return (
                       <div key={category}>
-                        <h3
-                          className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-center"
-                          onClick={() => {
-                            const newSet = new Set(openCategories);
-                            if (newSet.has(category)) {
-                              newSet.delete(category);
-                            } else {
-                              newSet.add(category);
-                            }
-                            setOpenCategories(newSet);
-                          }}
-                        >
-                          <span className="mr-2">{isOpen ? '▼' : '▶'}</span> {category}
-                        </h3>
+                        {/* Заголовок категории с поддержкой переноса текста */}
+<h3
+  className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-start gap-2 break-words"
+  onClick={() => {
+    const newSet = new Set(openCategories);
+    if (newSet.has(category)) {
+      newSet.delete(category);
+    } else {
+      newSet.add(category);
+    }
+    setOpenCategories(newSet);
+  }}
+  style={{ wordBreak: 'break-word' }}
+>
+  {/* Стрелочка раскрытия — фиксированная ширина, чтобы не сдвигалась */}
+  <span className="flex-shrink-0 w-4 text-center">{isOpen ? '▼' : '▶'}</span>
+  
+  {/* Название категории — занимает доступное место, переносится */}
+  <span className="flex-1 min-w-0 leading-tight">
+    {category}
+  </span>
+  
+  {/* Чекбокс "Все события категории" — не сжимается */}
+  {/* Кастомная кнопка-индикатор видимости категории */}
+<button
+  type="button"
+  onClick={(e) => {
+    e.stopPropagation();
+    toggleCategoryVisibility(category);
+  }}
+  className={`ml-1 w-4 h-4 flex items-center justify-center rounded text-[8px] font-bold flex-shrink-0 transition-colors
+    ${getCategoryVisibilityState(category) === 'all' 
+      ? 'bg-[#fb6b4b] text-white hover:bg-[#c7492e]' // красный крест
+      : getCategoryVisibilityState(category) === 'none'
+        ? 'bg-[#99f78f] text-[#12952c] hover:bg-[#12952c] hover:text-white' // зелёная галка
+        : 'bg-gray-300 text-gray-600 hover:bg-gray-400' // серый дефис (частичный)
+    }`}
+  title={
+    getCategoryVisibilityState(category) === 'all' 
+      ? 'Скрыть все события категории' 
+      : getCategoryVisibilityState(category) === 'none'
+        ? 'Показать все события категории'
+        : 'Переключить видимость категории'
+  }
+>
+  {getCategoryVisibilityState(category) === 'all' ? '✕' : 
+   getCategoryVisibilityState(category) === 'none' ? '✓' : '–'}
+</button>
+  
+</h3>
                         {isOpen && eventsInCategory.length > 0 &&
                           eventsInCategory.map((event) => (
                             <div
@@ -808,7 +888,7 @@ function App() {
                         setIsDetailPanelOpen(false);
                         setDisplayMode('popup');
                       }}
-                      className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#fb6b4b] focus:rounded-sm z-30"
+                      className="absolute top-3 right-3 text-gray-500 hover:text-gray-900 focus:outline-none focus:rounded-sm z-30"
                       aria-label="Закрыть панель деталей"
                     >
                       ✕
