@@ -74,7 +74,42 @@ function App() {
   const [detailPanelWidth, setDetailPanelWidth] = useState(250);
 
 
+  // =========================
+  // Хелперы и мемоизация (на верхнем уровне компонента)
+  // =========================
 
+  // Map для быстрого поиска события по ID
+  const eventsMap = useMemo(() => {
+    const map = new Map<number, Event>();
+    eventsData.forEach(e => map.set(e.id, e));
+    return map;
+  }, [eventsData]);
+
+  // Надёжная функция поиска события по ID
+  const getEventById = (id: number | null): Event | undefined => {
+    if (id === null || id === undefined) return undefined;
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    return eventsMap.get(numericId);
+  };
+
+  // Горячие клавиши: ← / → для навигации по событиям
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isDetailPanelOpen || !selectedEvent) return;
+
+      if (e.key === 'ArrowLeft' && selectedEvent.prevEvent) {
+        const prev = getEventById(selectedEvent.prevEvent);
+        if (prev) setSelectedEvent(prev);
+      }
+      if (e.key === 'ArrowRight' && selectedEvent.nextEvent) {
+        const next = getEventById(selectedEvent.nextEvent);
+        if (next) setSelectedEvent(next);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDetailPanelOpen, selectedEvent, eventsMap]); // 👈 eventsMap вместо eventsData
 
   // Тсссс...
   const handleLogoClick = () => {
@@ -917,18 +952,73 @@ function App() {
                     <span className="font-semibold text-black ">Описание:</span>
                     <p className="text-black ">{selectedEvent.description}</p>
                   </div>
+                  {/* Предыдущее событие — с названием */}
                   {selectedEvent.prevEvent && (
                     <div>
-                      <span className="font-semibold text-black ">Предыдущее событие:</span>
-                      <p className="text-black ">ID: {selectedEvent.prevEvent}</p>
+                      <span className="font-semibold text-black">Предыдущее событие:</span>
+                      <p className="text-black">
+                        {eventsMap.get(selectedEvent.prevEvent)?.title ?? `ID: ${selectedEvent.prevEvent}`}
+                      </p>
                     </div>
                   )}
+
+                  {/* Следующее событие — с названием */}
                   {selectedEvent.nextEvent && (
                     <div>
-                      <span className="font-semibold text-black ">Следующее событие:</span>
-                      <p className="text-black ">ID: {selectedEvent.nextEvent}</p>
+                      <span className="font-semibold text-black">Следующее событие:</span>
+                      <p className="text-black">
+                        {eventsMap.get(selectedEvent.nextEvent)?.title ?? `ID: ${selectedEvent.nextEvent}`}
+                      </p>
                     </div>
                   )}
+                </div>
+                {/* === Кнопки навигации: Предыдущее / Следующее событие === */}
+                <div className="mt-6 pt-4 border-t border-gray-300 flex items-center justify-between">
+                  {/* Кнопка "Предыдущее" */}
+                  <button
+                    onClick={() => {
+                      const prev = getEventById(selectedEvent.prevEvent);
+                      if (prev) setSelectedEvent(prev);
+                    }}
+                    // 👇 Проверяем, что событие реально существует, а не только что ID не null
+                    disabled={selectedEvent.prevEvent === null || !getEventById(selectedEvent.prevEvent)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all
+      ${selectedEvent.prevEvent !== null && getEventById(selectedEvent.prevEvent)
+                        ? 'bg-[#5D4037] text-white hover:bg-[#4E342E] active:scale-95 cursor-pointer'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    title={selectedEvent.prevEvent !== null && getEventById(selectedEvent.prevEvent)
+                      ? 'Перейти к предыдущему событию'
+                      : 'Нет предыдущего события'}
+                  >
+                    <span>←</span>
+                    <span className="hidden sm:inline">Предыдущее</span>
+                  </button>
+
+                  {/* Индикатор позиции */}
+                  {/*<span className="text-xs text-gray-500">
+    {eventsData.findIndex(e => e.id === selectedEvent.id) + 1} из {eventsData.length}
+  </span>*/}
+
+                  {/* Кнопка "Следующее" */}
+                  <button
+                    onClick={() => {
+                      const next = getEventById(selectedEvent.nextEvent);
+                      if (next) setSelectedEvent(next);
+                    }}
+                    disabled={selectedEvent.nextEvent === null || !getEventById(selectedEvent.nextEvent)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all
+      ${selectedEvent.nextEvent !== null && getEventById(selectedEvent.nextEvent)
+                        ? 'bg-[#5D4037] text-white hover:bg-[#4E342E] active:scale-95 cursor-pointer'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    title={selectedEvent.nextEvent !== null && getEventById(selectedEvent.nextEvent)
+                      ? 'Перейти к следующему событию'
+                      : 'Нет следующего события'}
+                  >
+                    <span className="hidden sm:inline">Следующее</span>
+                    <span>→</span>
+                  </button>
                 </div>
               </div>
             )}
@@ -938,7 +1028,10 @@ function App() {
         </div>
       )}
     </div>
+
   );
+
 }
+
 
 export default App;
