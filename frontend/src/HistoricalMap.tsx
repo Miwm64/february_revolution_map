@@ -260,19 +260,19 @@ export default function HistoricalMap({
 
 
     const getIconForEventType = (eventType: string): L.Icon => {
-        const iconMap: Record<string, () => L.Icon> = {
-            economic_protest: createCustomIcon_red,
-            political_protest: createCustomIcon_blue,
-            agitation_propaganda: createCustomIcon_green,
-            military_mutiny: createCustomIcon_purple,
-            armed_clash: createCustomIcon_violet,
-            government_decree: createCustomIcon_yellow,
-            government_formation: createCustomIcon_pink,
-            infrastructure_seizure: createCustomIcon_green,
-            transport_blockade: createCustomIcon_blue,
-            power_negotiation: createCustomIcon_green,
-            power_change: createCustomIcon_red
-        };
+    const iconMap: Record<string, () => L.Icon> = {
+        economic_protest: createCustomIcon_red,
+        political_protest: createCustomIcon_blue,
+        agitation_propaganda: createCustomIcon_green,
+        military_mutiny: createCustomIcon_purple,
+        armed_clash: createCustomIcon_violet,
+        government_decree: createCustomIcon_yellow,
+        government_formation: createCustomIcon_pink,
+        infrastructure_seizure: createCustomIcon_green,
+        transport_blockade: createCustomIcon_blue,
+        power_negotiation: createCustomIcon_green,
+        power_change: createCustomIcon_red
+    };
 
         // Возвращаем иконку для конкретного типа или красную по умолчанию
         const iconCreator = iconMap[eventType] || createCustomIcon_purple;

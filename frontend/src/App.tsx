@@ -1,7 +1,7 @@
 import './output.css';
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import 'leaflet/dist/leaflet.css';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion'; // Добавил AnimatePresence для анимации
 import HistoricalMap from './HistoricalMap';
 import './App.css';
 
@@ -73,9 +73,21 @@ function App() {
   const isResizing = useRef(false);
   const [detailPanelWidth, setDetailPanelWidth] = useState(250);
 
+  // =========================
+  // СОСТОЯНИЕ ПРЕДУПРЕЖДЕНИЯ О ДАТАХ
+  // =========================
+  const [showDisclaimer, setShowDisclaimer] = useState<boolean>(() => {
+    // Проверяем localStorage при первой загрузке
+    return localStorage.getItem('date_disclaimer_accepted') !== 'true';
+  });
+
+  const handleAcceptDisclaimer = () => {
+    localStorage.setItem('date_disclaimer_accepted', 'true');
+    setShowDisclaimer(false);
+  };
 
   // =========================
-  // Хелперы и мемоизация (на верхнем уровне компонента)
+  // Хелперы и мемоизация
   // =========================
 
   // Map для быстрого поиска события по ID
@@ -109,7 +121,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isDetailPanelOpen, selectedEvent, eventsMap]); // 👈 eventsMap вместо eventsData
+  }, [isDetailPanelOpen, selectedEvent, eventsMap]);
 
   // Тсссс...
   const handleLogoClick = () => {
@@ -482,7 +494,49 @@ function App() {
 
 
   return (
-    <div className="min-h-screen bg-background-creamy text-text-red-brown flex flex-col">
+    <div className="min-h-screen bg-background-creamy text-text-red-brown flex flex-col relative">
+      
+      {/* =========================
+          МОДАЛЬНОЕ ОКНО С ПРЕДУПРЕЖДЕНИЕМ
+         ========================= */}
+      <AnimatePresence>
+        {showDisclaimer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-background-creamy border-2 border-[#5D4037] rounded-xl shadow-2xl max-w-md w-full p-6 text-center relative overflow-hidden"
+            >
+              {/* Декоративный элемент */}
+              <div className="absolute top-0 left-0 w-full h-2 bg-[#fb6b4b]"></div>
+              
+              <h2 className="text-2xl font-bold mb-4 text-[#5D4037]" style={{ fontFamily: 'Georgia, serif' }}>
+                Важное уточнение
+              </h2>
+              
+              <p className="text-lg mb-6 leading-relaxed text-gray-800">
+                Все даты на карте указаны по <span className="font-bold text-[#fb6b4b]">современному (григорианскому) календарю</span>.
+                <br /><br />
+                В 1917 году Россия использовала юлианский календарь («старый стиль»), который отставал на 13 дней.
+              </p>
+
+              <button
+                onClick={handleAcceptDisclaimer}
+                className="w-full py-3 px-6 bg-[#5D4037] hover:bg-[#4E342E] text-white font-bold rounded-lg transition-all transform hover:scale-[1.02] active:scale-95 shadow-md"
+              >
+                Понятно, продолжить
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Заголовок */}
       <header className="bg-background-creamy border-b border-gray-700 p-4 shrink-0" style={{ minHeight: minButtonHeight * 2 }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -736,7 +790,7 @@ function App() {
                               toggleCategoryVisibility(category);
                             }}
                             className={`ml-1 w-4 h-4 flex items-center justify-center rounded text-[8px] font-bold flex-shrink-0 transition-colors
-    ${getCategoryVisibilityState(category) === 'all'
+                            ${getCategoryVisibilityState(category) === 'all'
                                 ? 'bg-[#fb6b4b] text-white hover:bg-[#c7492e]' // красный крест
                                 : getCategoryVisibilityState(category) === 'none'
                                   ? 'bg-[#99f78f] text-[#12952c] hover:bg-[#12952c] hover:text-white' // зелёная галка
