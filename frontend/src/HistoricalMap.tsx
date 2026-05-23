@@ -89,7 +89,7 @@ export default function HistoricalMap({
 
             if (isHighlighted) {
                 // === НАСТРОЙКИ ПОДСВЕТКИ ===
-                const HIGHLIGHT_COLOR = '#78350f'; // Цвет подсветки
+                const HIGHLIGHT_COLOR = '#37ff2c'; // Цвет подсветки
                 const HIGHLIGHT_SCALE = 1.10; // Увеличение
                 const HIGHLIGHT_SHADOW = `drop-shadow(0 0 6px ${HIGHLIGHT_COLOR}) drop-shadow(0 0 12px ${HIGHLIGHT_COLOR})`;
                 const HIGHLIGHT_OUTLINE_WIDTH = '2px';
@@ -201,90 +201,25 @@ export default function HistoricalMap({
     // =========================
     // Иконки
     // =========================
-    const createCustomIcon_dollar = () => {
+    const createCustomIcon_blue = () => {
         return L.icon({
-
-            iconUrl: 'icon_marker/dollar-no-bg.png', // укажите свой путь к изображению
-            iconSize: [40, 40], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_copybook = () => {
-        return L.icon({
-            iconUrl: 'icon_marker/copybook-no-bg.png', // укажите свой путь к изображению
-            iconSize: [35, 35], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_crown = () => {
-        return L.icon({
-            iconUrl: 'icon_marker/crown-no-bg.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_blue.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
         });
     };
-    const createCustomIcon_fence = () => {
+    const createCustomIcon_green = () => {
         return L.icon({
-            iconUrl: 'icon_marker/fence-no-bg.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_green.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
         });
     };
-    const createCustomIcon_fire = () => {
+    const createCustomIcon_pink = () => {
         return L.icon({
-            iconUrl: 'icon_marker/fire-no-bg.png', // укажите свой путь к изображению
-            iconSize: [27, 35], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_fist = () => {
-        return L.icon({
-            iconUrl: 'icon_marker/fist-no-bg.png', // укажите свой путь к изображению
-            iconSize: [30, 35], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_flag = () => {
-        return L.icon({
-            iconUrl: 'icon_marker/flag-no-bg.png', // укажите свой путь к изображению
-            iconSize: [40, 35], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_government = () => {
-        return L.icon({
-            iconUrl: 'icon_marker/government-no-bg.png', // укажите свой путь к изображению
-            iconSize: [35, 45], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_handshake = () => {
-        return L.icon({
-            iconUrl: 'icon_marker/handshake-no-bg.png', // укажите свой путь к изображению
-            iconSize: [40, 35], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_shield = () => {
-        return L.icon({
-            iconUrl: 'icon_marker/shield-no-bg.png', // укажите свой путь к изображению
-            iconSize: [35, 35], // размер иконки
-            iconAnchor: [16, 32], // точка привязки
-            popupAnchor: [0, -32], // позиция popup
-        });
-    };
-    const createCustomIcon_speaker = () => {
-        return L.icon({
-            iconUrl: 'icon_marker/speaker-no-bg.png', // укажите свой путь к изображению
+            iconUrl: 'marker/marker_pink.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -293,6 +228,22 @@ export default function HistoricalMap({
     const createCustomIcon_purple = () => {
         return L.icon({
             iconUrl: 'marker/marker_purple.png', // укажите свой путь к изображению
+            iconSize: [25, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_red = () => {
+        return L.icon({
+            iconUrl: 'marker/marker_red.png', // укажите свой путь к изображению
+            iconSize: [25, 35], // размер иконки
+            iconAnchor: [16, 32], // точка привязки
+            popupAnchor: [0, -32], // позиция popup
+        });
+    };
+    const createCustomIcon_violet = () => {
+        return L.icon({
+            iconUrl: 'marker/marker_violet.png', // укажите свой путь к изображению
             iconSize: [25, 35], // размер иконки
             iconAnchor: [16, 32], // точка привязки
             popupAnchor: [0, -32], // позиция popup
@@ -310,17 +261,17 @@ export default function HistoricalMap({
 
     const getIconForEventType = (eventType: string): L.Icon => {
         const iconMap: Record<string, () => L.Icon> = {
-            economic_protest: createCustomIcon_dollar,
-            political_protest: createCustomIcon_fist,
-            agitation_propaganda: createCustomIcon_speaker,
-            military_mutiny: createCustomIcon_fire,
-            armed_clash: createCustomIcon_shield,
-            government_decree: createCustomIcon_copybook,
-            government_formation: createCustomIcon_government,
-            infrastructure_seizure: createCustomIcon_flag,
-            transport_blockade: createCustomIcon_fence,
-            power_negotiation: createCustomIcon_handshake,
-            power_change: createCustomIcon_crown
+            economic_protest: createCustomIcon_red,
+            political_protest: createCustomIcon_blue,
+            agitation_propaganda: createCustomIcon_green,
+            military_mutiny: createCustomIcon_purple,
+            armed_clash: createCustomIcon_violet,
+            government_decree: createCustomIcon_yellow,
+            government_formation: createCustomIcon_pink,
+            infrastructure_seizure: createCustomIcon_green,
+            transport_blockade: createCustomIcon_blue,
+            power_negotiation: createCustomIcon_green,
+            power_change: createCustomIcon_red
         };
 
         // Возвращаем иконку для конкретного типа или красную по умолчанию

@@ -827,18 +827,18 @@ function App() {
                   onMarkerModeChange={setIsMarkerMode}
                   visibleEventIds={visibleEventIds}
                   displayMode={displayMode}
-                  selectedEventId={selectedEvent?.id ?? null} 
+                  selectedEventId={selectedEvent?.id ?? null}
                   onEventClick={(event) => {
-    console.log('🎯 App: onEventClick called with:', event.id);
-    console.log('📋 selectedEvent before:', selectedEvent?.id);
-    setSelectedEvent(event);
-    setIsDetailPanelOpen(true);
-    setDisplayMode('panel');
-    // Force re-render check
-    setTimeout(() => {
-        console.log('📋 selectedEvent after setTimeout:', selectedEvent?.id);
-    }, 100);
-}}
+                    console.log('🎯 App: onEventClick called with:', event.id);
+                    console.log('📋 selectedEvent before:', selectedEvent?.id);
+                    setSelectedEvent(event);
+                    setIsDetailPanelOpen(true);
+                    setDisplayMode('panel');
+                    // Force re-render check
+                    setTimeout(() => {
+                      console.log('📋 selectedEvent after setTimeout:', selectedEvent?.id);
+                    }, 100);
+                  }}
                 />
 
               </div>
