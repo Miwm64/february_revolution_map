@@ -417,9 +417,9 @@ function App() {
   const toggleCategoryVisibility = (category: string) => {
     const eventsInCategory = filteredGroupedByEventType[category] || [];
     if (eventsInCategory.length === 0) return;
-    
+
     const allVisible = areAllEventsInCategoryVisible(category);
-    
+
     setVisibleEventIds(prev => {
       const newSet = new Set(prev);
       if (allVisible) {
@@ -437,9 +437,9 @@ function App() {
   const getCategoryVisibilityState = (category: string): 'all' | 'none' | 'some' => {
     const eventsInCategory = filteredGroupedByEventType[category] || [];
     if (eventsInCategory.length === 0) return 'none';
-    
+
     const visibleCount = eventsInCategory.filter(e => visibleEventIds.has(e.id)).length;
-    
+
     if (visibleCount === eventsInCategory.length) return 'all';
     if (visibleCount === 0) return 'none';
     return 'some';
@@ -671,55 +671,55 @@ function App() {
                     return (
                       <div key={category}>
                         {/* Заголовок категории с поддержкой переноса текста */}
-<h3
-  className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-start gap-2 break-words"
-  onClick={() => {
-    const newSet = new Set(openCategories);
-    if (newSet.has(category)) {
-      newSet.delete(category);
-    } else {
-      newSet.add(category);
-    }
-    setOpenCategories(newSet);
-  }}
-  style={{ wordBreak: 'break-word' }}
->
-  {/* Стрелочка раскрытия — фиксированная ширина, чтобы не сдвигалась */}
-  <span className="flex-shrink-0 w-4 text-center">{isOpen ? '▼' : '▶'}</span>
-  
-  {/* Название категории — занимает доступное место, переносится */}
-  <span className="flex-1 min-w-0 leading-tight">
-    {category}
-  </span>
-  
-  {/* Чекбокс "Все события категории" — не сжимается */}
-  {/* Кастомная кнопка-индикатор видимости категории */}
-<button
-  type="button"
-  onClick={(e) => {
-    e.stopPropagation();
-    toggleCategoryVisibility(category);
-  }}
-  className={`ml-1 w-4 h-4 flex items-center justify-center rounded text-[8px] font-bold flex-shrink-0 transition-colors
-    ${getCategoryVisibilityState(category) === 'all' 
-      ? 'bg-[#fb6b4b] text-white hover:bg-[#c7492e]' // красный крест
-      : getCategoryVisibilityState(category) === 'none'
-        ? 'bg-[#99f78f] text-[#12952c] hover:bg-[#12952c] hover:text-white' // зелёная галка
-        : 'bg-gray-300 text-gray-600 hover:bg-gray-400' // серый дефис (частичный)
-    }`}
-  title={
-    getCategoryVisibilityState(category) === 'all' 
-      ? 'Скрыть все события категории' 
-      : getCategoryVisibilityState(category) === 'none'
-        ? 'Показать все события категории'
-        : 'Переключить видимость категории'
-  }
->
-  {getCategoryVisibilityState(category) === 'all' ? '✕' : 
-   getCategoryVisibilityState(category) === 'none' ? '✓' : '–'}
-</button>
-  
-</h3>
+                        <h3
+                          className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-start gap-2 break-words"
+                          onClick={() => {
+                            const newSet = new Set(openCategories);
+                            if (newSet.has(category)) {
+                              newSet.delete(category);
+                            } else {
+                              newSet.add(category);
+                            }
+                            setOpenCategories(newSet);
+                          }}
+                          style={{ wordBreak: 'break-word' }}
+                        >
+                          {/* Стрелочка раскрытия — фиксированная ширина, чтобы не сдвигалась */}
+                          <span className="flex-shrink-0 w-4 text-center">{isOpen ? '▼' : '▶'}</span>
+
+                          {/* Название категории — занимает доступное место, переносится */}
+                          <span className="flex-1 min-w-0 leading-tight">
+                            {category}
+                          </span>
+
+                          {/* Чекбокс "Все события категории" — не сжимается */}
+                          {/* Кастомная кнопка-индикатор видимости категории */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleCategoryVisibility(category);
+                            }}
+                            className={`ml-1 w-4 h-4 flex items-center justify-center rounded text-[8px] font-bold flex-shrink-0 transition-colors
+    ${getCategoryVisibilityState(category) === 'all'
+                                ? 'bg-[#fb6b4b] text-white hover:bg-[#c7492e]' // красный крест
+                                : getCategoryVisibilityState(category) === 'none'
+                                  ? 'bg-[#99f78f] text-[#12952c] hover:bg-[#12952c] hover:text-white' // зелёная галка
+                                  : 'bg-gray-300 text-gray-600 hover:bg-gray-400' // серый дефис (частичный)
+                              }`}
+                            title={
+                              getCategoryVisibilityState(category) === 'all'
+                                ? 'Скрыть все события категории'
+                                : getCategoryVisibilityState(category) === 'none'
+                                  ? 'Показать все события категории'
+                                  : 'Переключить видимость категории'
+                            }
+                          >
+                            {getCategoryVisibilityState(category) === 'all' ? '✕' :
+                              getCategoryVisibilityState(category) === 'none' ? '✓' : '–'}
+                          </button>
+
+                        </h3>
                         {isOpen && eventsInCategory.length > 0 &&
                           eventsInCategory.map((event) => (
                             <div
@@ -827,11 +827,18 @@ function App() {
                   onMarkerModeChange={setIsMarkerMode}
                   visibleEventIds={visibleEventIds}
                   displayMode={displayMode}
+                  selectedEventId={selectedEvent?.id ?? null} 
                   onEventClick={(event) => {
-                    setSelectedEvent(event);
-                    setIsDetailPanelOpen(true);
-                    setDisplayMode('panel');
-                  }}
+    console.log('🎯 App: onEventClick called with:', event.id);
+    console.log('📋 selectedEvent before:', selectedEvent?.id);
+    setSelectedEvent(event);
+    setIsDetailPanelOpen(true);
+    setDisplayMode('panel');
+    // Force re-render check
+    setTimeout(() => {
+        console.log('📋 selectedEvent after setTimeout:', selectedEvent?.id);
+    }, 100);
+}}
                 />
 
               </div>
@@ -886,6 +893,7 @@ function App() {
                     <button
                       onClick={() => {
                         setIsDetailPanelOpen(false);
+                        setSelectedEvent(null);
                         setDisplayMode('popup');
                       }}
                       className="absolute top-3 right-3 text-gray-500 hover:text-gray-900 focus:outline-none focus:rounded-sm z-30"
