@@ -878,7 +878,7 @@ function App() {
 
             {/* Ручка изменения размера сайдбара */}
             <div
-              className="absolute top-0 left-0 w-1 h-full cursor-col-resize bg-[#5D4037]/30 hover:bg-[#5D4037] transition-colors z-20"
+              className="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-[#5D4037]/30 hover:bg-[#5D4037] transition-colors z-20"
               onMouseDown={startResize}
               title="Изменить ширину панели"
             />

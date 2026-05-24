@@ -1,0 +1,225 @@
+
+        <div className="flex flex-1 overflow-hidden">
+          
+          {/* ЛЕВАЯ ПАНЕЛЬ (САЙДБАР) */}
+          <aside
+            ref={sidebarRef}
+            className="bg-background-creamy border-r border-gray-700 p-4 flex flex-col shrink-0 relative"
+            style={{
+              width: `${sidebarWidth}px`,
+              maxWidth: '400px',
+              minWidth: '200px',
+              backgroundImage: "url(/foncity.png)",
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'bottom left',
+              backgroundSize: 'contain',
+              maxHeight: 'calc(100vh - 108px)',
+            }}
+          >
+            <h2 className="text-lg font-semibold mb-4 text-text-red-brown">События революции</h2>
+            
+            {/* Поиск */}
+            <div className="mb-2 sticky top-0 bg-background-creamy z-10 relative">
+              <input
+                type="text"
+                placeholder="Поиск..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 bg-background-creamy-button border border-gray-600 rounded-lg mb-4 text-text-red-brown focus:outline-none focus:border-blue-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-9/24 transform -translate-y-1/2 text-lg text-[#fb6b4b] hover:text-[#c7492e] focus:outline-none flex items-center justify-center w-6 h-6"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  aria-label="Очистить поиск"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Панель управления видом списка */}
+            {!isSearching && (
+              <div className="flex items-center mb-2">
+                <button
+                  onClick={toggleDisplayMode}
+                  className="flex-1 px-2 py-2 rounded-lg bg-[#5D4037] text-white hover:bg-[#4E342E] transition-colors text-sm"
+                  title="Переключить сортировку"
+                >
+                  {showCategories ? 'Сортировать по дате' : 'Сортировать по категориям'}
+                </button>
+                
+                {/* Кнопка "Показать все / Скрыть все" */}
+                <button
+                  onClick={() => {
+                    if (visibleEventIds.size === eventsData.length) {
+                      setVisibleEventIds(new Set()); // Скрыть все
+                    } else {
+                      setVisibleEventIds(new Set(eventsData.map(e => e.id))); // Показать все
+                    }
+                  }}
+                  className={`ml-2 px-2 py-1 text-xs rounded transition-colors
+                    ${visibleEventIds.size === eventsData.length
+                      ? 'bg-[#fb6b4b] text-white hover:bg-[#c7492e]' 
+                      : 'bg-[#99f78f] hover:bg-[#12952c] text-[#12952c] hover:text-white' 
+                    }`}
+                  title={visibleEventIds.size === eventsData.length ? 'Снять выделение' : 'Выделить всё'}
+                >
+                  {visibleEventIds.size === eventsData.length ? '✕' : '✓'}
+                </button>
+              </div>
+            )}
+
+            {/* Список событий */}
+            <div className="flex-1 overflow-y-auto pr-3 custom-scrollbar">
+              {isSearching ? (
+                // РЕЖИМ ПОИСКА
+                <div>
+                  {filteredEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="w-full text-left p-3 bg-background-creamy-button rounded-lg border border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
+                          <div className="font-medium">{event.title}</div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={visibleEventIds.has(event.id)}
+                          onChange={() => toggleEventVisibility(event.id)}
+                          title="Показать/скрыть на карте"
+                          className="ml-2 accent-[#5D4037] w-4 h-4 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : showCategories ? (
+                // РЕЖИМ КАТЕГОРИЙ
+                sortedCategories.map((category) => {
+                  const isOpen = openCategories.has(category);
+                  const eventsInCategory = filteredGroupedByEventType[category] || [];
+                  
+                  return (
+                    <div key={category} className="mb-2">
+                      <h3
+                        className="mt-4 mb-2 text-xl font-bold cursor-pointer flex items-start gap-2 break-words select-none"
+                        onClick={() => {
+                          const newSet = new Set(openCategories);
+                          if (newSet.has(category)) newSet.delete(category);
+                          else newSet.add(category);
+                          setOpenCategories(newSet);
+                        }}
+                        style={{ wordBreak: 'break-word' }}
+                      >
+                        <span className="flex-shrink-0 w-4 text-center pt-1 text-[#5D4037]">
+                          {isOpen ? '▼' : '▶'}
+                        </span>
+                        <span className="flex-1 min-w-0 leading-tight text-[#5D4037]">
+                          {category}
+                        </span>
+
+                        {/* Индикатор видимости категории */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCategoryVisibility(category);
+                          }}
+                          className={`ml-1 w-5 h-5 flex items-center justify-center rounded text-[10px] font-bold flex-shrink-0 transition-colors border border-gray-400
+                          ${getCategoryVisibilityState(category) === 'all'
+                              ? 'bg-[#fb6b4b] text-white border-[#fb6b4b] hover:bg-[#c7492e]'
+                              : getCategoryVisibilityState(category) === 'none'
+                                ? 'bg-[#99f78f] text-[#12952c] border-[#12952c] hover:bg-[#12952c] hover:text-white'
+                                : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                            }`}
+                          title={
+                            getCategoryVisibilityState(category) === 'all' ? 'Скрыть категорию' :
+                            getCategoryVisibilityState(category) === 'none' ? 'Показать категорию' :
+                            'Частично видно'
+                          }
+                        >
+                          {getCategoryVisibilityState(category) === 'all' ? '✕' :
+                           getCategoryVisibilityState(category) === 'none' ? '✓' : '–'}
+                        </button>
+                      </h3>
+
+                      {isOpen && (
+                        <>
+                          {eventsInCategory.length > 0 ? (
+                            eventsInCategory.map((event) => (
+                              <div
+                                key={event.id}
+                                className="w-full text-left p-3 bg-background-creamy-button rounded-lg border border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2 ml-4 shadow-sm"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
+                                    <div className="font-medium">{event.title}</div>
+                                  </div>
+                                  <input
+                                    type="checkbox"
+                                    checked={visibleEventIds.has(event.id)}
+                                    onChange={() => toggleEventVisibility(event.id)}
+                                    title="Показать/скрыть на карте"
+                                    className="ml-2 accent-[#5D4037] w-4 h-4 cursor-pointer"
+                                  />
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="ml-8 text-text-red-brown italic text-sm">Нет событий</div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                // РЕЖИМ СПИСКА (ПО ДАТАМ)
+                filteredEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="w-full text-left p-3 bg-background-creamy-button rounded-lg border border-l-4 border-[var(--color-red-brown)] text-text-red-brown mb-2 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-text-red-brown font-semibold">{event.displayTime}</div>
+                        <div className="font-medium">{event.title}</div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={visibleEventIds.has(event.id)}
+                        onChange={() => toggleEventVisibility(event.id)}
+                        title="Показать/скрыть на карте"
+                        className="ml-2 accent-[#5D4037] w-4 h-4 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Нижнее меню сайдбара */}
+            <div className="mt-auto pt-4 flex flex-col space-y-2">
+              <button
+                onClick={handleSetMarker}
+                className={`px-3 py-2 rounded-lg transition-all shadow-md flex items-center justify-center gap-2
+                  ${isMarkerMode 
+                    ? 'bg-orange-500 text-white ring-2 ring-orange-300' 
+                    : 'bg-[#8B4513] text-white hover:bg-[#70360F]'}`}
+              >
+                📍 {isMarkerMode ? 'Режим метки активен' : 'Поставить метку'}
+              </button>
+            </div>
+
+            {/* Ручка изменения размера сайдбара */}
+            <div
+              className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize bg-gray-300/50 hover:bg-[#5D4037] transition-colors z-10 rounded-l"
+              onMouseDown={startResize}
+              title="Изменить ширину панели"
+            />
+          </aside>
