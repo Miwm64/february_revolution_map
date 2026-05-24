@@ -2,6 +2,31 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./index.css";
 
+// ================= ENUMS =================
+
+export const EventTypeEnum = {
+    economic_protest: "Экономический протест",
+    political_protest: "Политический протест",
+    agitation_propaganda: "Агитация и пропаганда",
+    military_mutiny: "Военное неповиновение / мятеж",
+    armed_clash: "Силовое столкновение",
+    government_decree: "Государственный указ / распоряжение",
+    government_formation: "Формирование органов власти",
+    infrastructure_seizure: "Захват инфраструктуры / установление контроля",
+    transport_blockade: "Транспортная блокада",
+    power_negotiation: "Переговоры о власти",
+    power_change: "Отречение / смена власти",
+} as const;
+
+export const TimePeriodEnum = {
+    morning: "morning",
+    afternoon: "afternoon",
+    evening: "evening",
+    night: "night",
+} as const;
+
+// ================= TYPES =================
+
 type Event = {
     id: number;
     title: string;
@@ -10,6 +35,9 @@ type Event = {
     coordinates: { x: number; y: number };
     prevEvent: number | null;
     nextEvent: number | null;
+
+    eventType?: keyof typeof EventTypeEnum | null;
+    timePeriod?: keyof typeof TimePeriodEnum | null;
 };
 
 const UpdatePage = () => {
@@ -72,22 +100,53 @@ const UpdatePage = () => {
     };
 
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
         if (!event) return;
+
         const { name, value } = e.target;
 
         if (name === "x" || name === "y") {
             setEvent({
                 ...event,
-                coordinates: { ...event.coordinates, [name]: Number(value) },
+                coordinates: {
+                    ...event.coordinates,
+                    [name]: value === "" ? 0 : Number(value),
+                },
             });
-        } else if (name === "prevEvent" || name === "nextEvent") {
-            setEvent({ ...event, [name]: value ? Number(value) : null });
-        } else {
-            setEvent({ ...event, [name]: value });
+            return;
         }
+
+        if (name === "prevEvent" || name === "nextEvent") {
+            setEvent({
+                ...event,
+                [name]: value === "" ? null : Number(value),
+            });
+            return;
+        }
+
+        // ================= IMPORTANT FIX =================
+        // Convert empty string to NULL for enums + all string fields that allow null
+        if (name === "eventType" || name === "timePeriod") {
+            setEvent({
+                ...event,
+                [name]: value === "" ? null : value,
+            });
+            return;
+        }
+
+        setEvent({
+            ...event,
+            [name]: value,
+        });
     };
+
+    // ================= SANITIZE BEFORE SEND =================
+    const sanitizeEvent = (event: Event) => ({
+        ...event,
+        eventType: event.eventType ?? null,
+        timePeriod: event.timePeriod ?? null,
+    });
 
     // Update event
     const handleUpdate = () => {
@@ -105,7 +164,10 @@ const UpdatePage = () => {
         fetch("http://frmap.miwm64.spb.ru/api/update", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token, event }),
+            body: JSON.stringify({
+                token,
+                event: sanitizeEvent(event), // ✅ FIX HERE
+            }),
         })
             .then((res) => {
                 if (!res.ok) throw new Error("Update failed");
@@ -157,11 +219,11 @@ const UpdatePage = () => {
                 setError("Failed to delete event");
                 setLoading(false);
             });
-
     };
 
     return (
         <div className="p-6 max-w-xl mx-auto space-y-4">
+
             <form onSubmit={handleSubmitId} className="mb-4">
                 <label className="block mb-2 font-medium">Enter Event ID:</label>
                 <div className="flex gap-2">
@@ -171,10 +233,7 @@ const UpdatePage = () => {
                         onChange={(e) => setInputId(e.target.value)}
                         className="border p-2 flex-1"
                     />
-                    <button
-                        type="submit"
-                        className="bg-blue-500 text-white px-4 rounded"
-                    >
+                    <button type="submit" className="bg-blue-500 text-white px-4 rounded">
                         Load
                     </button>
                 </div>
@@ -186,6 +245,7 @@ const UpdatePage = () => {
 
             {event && (
                 <div className="space-y-4">
+
                     <div>
                         <label className="block font-medium">Title</label>
                         <input
@@ -215,6 +275,42 @@ const UpdatePage = () => {
                             onChange={handleChange}
                             className="border p-2 w-full"
                         />
+                    </div>
+
+                    {/* EVENT TYPE */}
+                    <div>
+                        <label className="block font-medium">Event Type</label>
+                        <select
+                            name="eventType"
+                            value={event.eventType ?? ""}
+                            onChange={handleChange}
+                            className="border p-2 w-full"
+                        >
+                            <option value="">-- none --</option>
+                            {Object.entries(EventTypeEnum).map(([key, label]) => (
+                                <option key={key} value={key}>
+                                    {label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* TIME PERIOD */}
+                    <div>
+                        <label className="block font-medium">Time Period</label>
+                        <select
+                            name="timePeriod"
+                            value={event.timePeriod ?? ""}
+                            onChange={handleChange}
+                            className="border p-2 w-full"
+                        >
+                            <option value="">-- none --</option>
+                            {Object.keys(TimePeriodEnum).map((key) => (
+                                <option key={key} value={key}>
+                                    {key}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="flex gap-2">
@@ -279,6 +375,7 @@ const UpdatePage = () => {
                             Delete
                         </button>
                     </div>
+
                 </div>
             )}
         </div>

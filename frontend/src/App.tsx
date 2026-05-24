@@ -453,6 +453,7 @@ function App() {
     setShowCategories(prev => !prev);
   };
 
+
   // --- Логика Resizable (изменение размера панелей) ---
 
   const startResize = (e: React.MouseEvent) => {

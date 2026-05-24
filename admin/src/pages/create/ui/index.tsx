@@ -1,6 +1,31 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// ================= ENUMS =================
+
+export const EventTypeEnum = {
+    economic_protest: "Экономический протест",
+    political_protest: "Политический протест",
+    agitation_propaganda: "Агитация и пропаганда",
+    military_mutiny: "Военное неповиновение / мятеж",
+    armed_clash: "Силовое столкновение",
+    government_decree: "Государственный указ / распоряжение",
+    government_formation: "Формирование органов власти",
+    infrastructure_seizure: "Захват инфраструктуры / установление контроля",
+    transport_blockade: "Транспортная блокада",
+    power_negotiation: "Переговоры о власти",
+    power_change: "Отречение / смена власти",
+} as const;
+
+export const TimePeriodEnum = {
+    morning: "morning",
+    afternoon: "afternoon",
+    evening: "evening",
+    night: "night",
+} as const;
+
+// ================= TYPE =================
+
 type Event = {
     title: string;
     description: string;
@@ -8,6 +33,9 @@ type Event = {
     coordinates: { x: number; y: number };
     prevEvent: number | null;
     nextEvent: number | null;
+
+    eventType?: keyof typeof EventTypeEnum | null;
+    timePeriod?: keyof typeof TimePeriodEnum | null;
 };
 
 const CreatePage = () => {
@@ -20,6 +48,8 @@ const CreatePage = () => {
         coordinates: { x: 0, y: 0 },
         prevEvent: null,
         nextEvent: null,
+        eventType: null,
+        timePeriod: null,
     });
 
     const [loading, setLoading] = useState(false);
@@ -32,21 +62,47 @@ const CreatePage = () => {
     };
 
     const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
         const { name, value } = e.target;
 
         if (name === "x" || name === "y") {
             setEvent({
                 ...event,
-                coordinates: { ...event.coordinates, [name]: Number(value) },
+                coordinates: { ...event.coordinates, [name]: value === "" ? 0 : Number(value) },
             });
-        } else if (name === "prevEvent" || name === "nextEvent") {
-            setEvent({ ...event, [name]: value ? Number(value) : null });
-        } else {
-            setEvent({ ...event, [name]: value });
+            return;
         }
+
+        if (name === "prevEvent" || name === "nextEvent") {
+            setEvent({
+                ...event,
+                [name]: value === "" ? null : Number(value),
+            });
+            return;
+        }
+
+        // ================= IMPORTANT FIX =================
+        if (name === "eventType" || name === "timePeriod") {
+            setEvent({
+                ...event,
+                [name]: value === "" ? null : value,
+            });
+            return;
+        }
+
+        setEvent({
+            ...event,
+            [name]: value,
+        });
     };
+
+    // ================= SANITIZE BEFORE SEND =================
+    const sanitizeEvent = (event: Event) => ({
+        ...event,
+        eventType: event.eventType ?? null,
+        timePeriod: event.timePeriod ?? null,
+    });
 
     const handleCreate = () => {
         const token = getToken();
@@ -63,7 +119,10 @@ const CreatePage = () => {
         fetch("http://frmap.miwm64.spb.ru/api/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token, event }),
+            body: JSON.stringify({
+                token,
+                event: sanitizeEvent(event), // ✅ IMPORTANT FIX
+            }),
         })
             .then((res) => {
                 if (!res.ok) throw new Error("Create failed");
@@ -86,7 +145,9 @@ const CreatePage = () => {
 
     return (
         <div className="p-6 max-w-xl mx-auto space-y-4">
+
             <div className="space-y-4">
+
                 <div>
                     <label className="block font-medium">Title</label>
                     <input
@@ -118,6 +179,42 @@ const CreatePage = () => {
                     />
                 </div>
 
+                {/* EVENT TYPE */}
+                <div>
+                    <label className="block font-medium">Event Type</label>
+                    <select
+                        name="eventType"
+                        value={event.eventType ?? ""}
+                        onChange={handleChange}
+                        className="border p-2 w-full"
+                    >
+                        <option value="">-- none --</option>
+                        {Object.entries(EventTypeEnum).map(([key, label]) => (
+                            <option key={key} value={key}>
+                                {label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* TIME PERIOD */}
+                <div>
+                    <label className="block font-medium">Time Period</label>
+                    <select
+                        name="timePeriod"
+                        value={event.timePeriod ?? ""}
+                        onChange={handleChange}
+                        className="border p-2 w-full"
+                    >
+                        <option value="">-- none --</option>
+                        {Object.keys(TimePeriodEnum).map((key) => (
+                            <option key={key} value={key}>
+                                {key}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
                 <div className="flex gap-2">
                     <div className="flex-1">
                         <label className="block font-medium">X</label>
@@ -129,6 +226,7 @@ const CreatePage = () => {
                             className="border p-2 w-full"
                         />
                     </div>
+
                     <div className="flex-1">
                         <label className="block font-medium">Y</label>
                         <input
@@ -152,6 +250,7 @@ const CreatePage = () => {
                             className="border p-2 w-full"
                         />
                     </div>
+
                     <div className="flex-1">
                         <label className="block font-medium">Next Event ID</label>
                         <input
@@ -164,7 +263,6 @@ const CreatePage = () => {
                     </div>
                 </div>
 
-                {/* Messages */}
                 {error && <div className="text-red-600">{error}</div>}
                 {success && <div className="text-green-600">{success}</div>}
 
@@ -175,6 +273,7 @@ const CreatePage = () => {
                 >
                     Create Event
                 </button>
+
             </div>
         </div>
     );

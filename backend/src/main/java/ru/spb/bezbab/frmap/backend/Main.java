@@ -14,9 +14,9 @@ public class Main {
     @Bean
     public ExecutorService executorService() {
         return new ExecutorService(
-                System.getenv("PG_URL"),
-                System.getenv("PG_USER"),
-                System.getenv("PG_PASSWORD")
+                "jdbc:postgresql://miwm64.spb.ru:5432/frmap",
+                "postgres",
+                "2128506Pg!"
         );
     }
 
