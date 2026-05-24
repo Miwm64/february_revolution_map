@@ -453,10 +453,6 @@ function App() {
     setShowCategories(prev => !prev);
   };
 
-  // Обработчики для кнопок
-  const handleSetMarker = () => {
-    setIsMarkerMode(prev => !prev);
-  };
 
   // --- Логика Resizable (изменение размера панелей) ---
 
